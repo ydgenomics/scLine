@@ -9,6 +9,13 @@
   - 基于conda环境配置，使用已有R和python软件的API，通过git进行部署
   - 操作使用sh参数命令
 - **流程设计**
+  - 0_env
+  - project-1
+    - 1_qc
+  - project-2
+    - 1_qc
+- **环境配置**
+  - [document](./env/README.md)
 - **测试**
   - 拟南芥对照数据
   - 拟南芥时序数据
