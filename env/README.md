@@ -75,10 +75,18 @@ conda install conda-forge::ipykernel -y
 conda install conda-forge::r-seurat -y
 conda install bioconda::bioconductor-dropletutils -y
 conda install conda-forge::scanpy -y
+conda install bioconda::scrublet -y
+conda install conda-forge::leidenalg -y
+conda install conda-forge::r-soupx -y
+
 
 # 02_anno
 conda install bioconda::bioconductor-singler -y
 conda install conda-forge::r-hgnchelper -y
+conda install conda-forge::r-tidyverse -y
+conda install conda-forge::r-ggraph -y
+conda install conda-forge::r-data.tree -y
+conda install bioconda::bioconductor-scater -y
 ```
 
 </details>
