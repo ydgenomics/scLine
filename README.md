@@ -25,14 +25,28 @@
 
   ```mermaid
   flowchart LR
-  A[Hard] -->|TEXT| B(Round)
-  ```
-  ```mermaid
-  flowchart LR
-  A[开始] --> B[检查输入]
-  B --> C{输入有效吗?}
-  C -->|是| D[继续处理]
-  C -->|否| E[提示错误]
+  A[01_qc] --> A0{doSoupX?}
+  A0 -->|yes| A1.1[SoupX] --> A1.2[scrublet]
+  A0 -->|no| A2.1[scrublet]
+  A --> B[02_anno]
+  B --> B0{haveRef?}
+  B0 -->|yes| B1[singleR]
+  B --> B01{haveMarker?} -->|yes| B2[scType]
+  B1 --> B3[summary]
+  B2 --> B3
+  A --> C[03_enrich]
+  C --> C0{haveProtein?} -->|yes| C1[eggnog-mapper] --> C2[clusterprofiler/gofigure] --> B3
+  B --> D[04_integration] --> D1[scVI,harmony,CCA,BBKNN,RLIGER] --> D2[scib-metrics]
+  B3 --> D
+  D --> E[05_metaneighbor]
+  D --> F[06_dea]
+  D --> H[07_pseudotime]
+  linkStyle 4 stroke:#ff0000,stroke-width:3px
+  linkStyle 11 stroke:#ff0000,stroke-width:3px
+  linkStyle 16 stroke:#ff0000,stroke-width:3px
+  linkStyle 20 stroke:#ff0000,stroke-width:3px
+  linkStyle 21 stroke:#ff0000,stroke-width:3px
+  linkStyle 22 stroke:#ff0000,stroke-width:3px
   ```
 
   - **输出**
