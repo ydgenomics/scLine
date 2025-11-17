@@ -22,6 +22,19 @@
     - 09_module: 模块(GeneNMF/hdWGCNA)
     - 10_cellphone: 细胞通讯(plantphone)
     - 11_grn: 转录调控网络(pySCENIC/IReNA)
+
+  ```mermaid
+  flowchart LR
+  A[Hard] -->|TEXT| B(Round)
+  ```
+  ```mermaid
+  flowchart LR
+  A[开始] --> B[检查输入]
+  B --> C{输入有效吗?}
+  C -->|是| D[继续处理]
+  C -->|否| E[提示错误]
+  ```
+
   - **输出**
     - 每个子分析单独生成一个文件夹，包含单细胞数据和可视化文件
     - 输出运行记录`log.txt`，包含每步运行的时间和潜在的报错信息
