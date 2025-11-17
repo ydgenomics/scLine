@@ -57,6 +57,7 @@ source /software/miniconda/bin/activate
 
 ```shell
 source /software/miniconda/bin/activate
+conda install bioconda::nextflow -y
 # R
 conda create -n scline r-base=4.3 -y
 conda activate scline
