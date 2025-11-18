@@ -24,29 +24,27 @@
     - 11_grn: 转录调控网络(pySCENIC/IReNA) -->
 
   ```mermaid
-  flowchart LR
-  A[01_qc] --> A0{doSoupX?}
-  A0 -->|yes| A1.1[SoupX] --> A1.2[scrublet]
-  A0 -->|no| A2.1[scrublet]
-  A --> B[02_anno]
-  B --> B0{haveRef?}
-  B0 -->|yes| B1[singleR]
-  B --> B01{haveMarker?} -->|yes| B2[scType]
-  B1 --> B3[summary]
-  B2 --> B3
-  A --> C[03_enrich]
-  C --> C0{haveProtein?} -->|yes| C1[eggnog-mapper] --> C2[clusterprofiler/gofigure] --> B3
-  B --> D[04_integration] --> D1[scVI,harmony,CCA,BBKNN,RLIGER] --> D2[scib-metrics]
-  B3 --> D
-  D --> E[05_metaneighbor]
-  D --> F[06_dea]
-  D --> H[07_pseudotime]
-  linkStyle 4 stroke:#ff0000,stroke-width:3px
-  linkStyle 11 stroke:#ff0000,stroke-width:3px
-  linkStyle 16 stroke:#ff0000,stroke-width:3px
-  linkStyle 20 stroke:#ff0000,stroke-width:3px
-  linkStyle 21 stroke:#ff0000,stroke-width:3px
-  linkStyle 22 stroke:#ff0000,stroke-width:3px
+  flowchart TB
+  01[01_qc] --- 01.1{doSoupX?}
+  01.1 ---|yes| 01.2[SoupX] --- 01.3[scrublet]
+  01.1 ---|no| 01.3
+  01.3 --- 01.4[convert] --- 01.5[merge]
+  01 ---> 04[04_metaneighbor]
+  01 ---> 06[06_enrich]
+  06 --- 06.1{haveProtein?} ---|yes| 06.2[eggnog-mapper] --- 06.3[clusterprofiler/gofigure]
+  01 --> 02[02_anno]
+  02 --- 02.1{haveRef?}
+  02.1 ---|yes| 02.2[singleR]
+  02 --- 02.3{haveMarker?} ---|yes| 02.4[scType]
+  02.2 --- 02.5[summary]
+  02.4 --- 02.5
+  02 --- 02.6[anno]
+  02 --> 03[03_integrate] --- 03.1[scVI,harmony,CCA,BBKNN,RLIGER] --- 03.2[scib-metrics]
+  03 --> 05[05_dea] --> 06
+  03 --> 07[07_pseudotime]
+  03 --> 08[08_trajectory]
+  classDef mainNode fill:#ffcccc,stroke:#ff0000,stroke-width:3px
+  class 01,02,03,04,05,06,07,08 mainNode
   ```
 
   - **输出**
