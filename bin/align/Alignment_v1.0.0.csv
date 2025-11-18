@@ -1,0 +1,2 @@
+EntityID,fasta1,fasta2,method,mem_alignment
+test,/Files/yangdong/wdl/blast/Ghirsutum_gene_peptide_trimmed.fasta,/Files/yangdong/wdl/blast/TM-1_V2.1.gene.pep.fa,diamond,8

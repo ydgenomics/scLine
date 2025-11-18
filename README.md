@@ -19,9 +19,9 @@
     - 06_enrich: 富集分析(clusterprofiler/eggnog-mapper/go-figure)
     - 07_pseudotime: 伪时序(cytotrace/dpt/palantir/cellrank2/Genes2Genes)
     - 08_trajectory: 轨迹(monocle)
-    - 09_module: 模块(GeneNMF/hdWGCNA)
+    <!-- - 09_module: 模块(GeneNMF/hdWGCNA)
     - 10_cellphone: 细胞通讯(plantphone)
-    - 11_grn: 转录调控网络(pySCENIC/IReNA)
+    - 11_grn: 转录调控网络(pySCENIC/IReNA) -->
 
   ```mermaid
   flowchart LR

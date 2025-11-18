@@ -1,0 +1,2 @@
+EntityID,rds,prefix,sankey_order,batch_key,cluster_key,mem_similarity
+test_peanut,/Files/yangdong/wdl/SCP/Dataget/W202508040017201/01_dataget/peanut/peanut_merge.rds,peanut],"H1314|H2014",biosample,leiden_res_0.50,32

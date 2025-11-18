@@ -1,0 +1,11 @@
+EntityID,unintegrated_h5ad,integrated_file,species,batch_key,label_key,methods_file,pcas_file,deals_file,tests_file,mem_scdatacg,mem_scib
+test_peanut,/Files/yangdong/wdl/SCP/Integration/W202508090027545/03_integration/peanut_unintegration_integrated.h5ad,/Files/yangdong/wdl/SCP/Integration/W202508090027545/03_integration/peanut_BBKNNR_integrated.rds,peanut,biosample,anno1,BBKNNR,X_pca,N,true,8,32
+test_peanut,,/Files/yangdong/wdl/SCP/Integration/W202508090027545/03_integration/peanut_harmony_integrated.h5ad,,,,harmony,X_pca_harmony,N,true,,
+test_peanut,,/Files/yangdong/wdl/SCP/Integration/W202508090027545/03_integration/peanut_rliger.INMF_integrated.rds,,,,rliger.INMF,X_inmf,N,true,,
+test_peanut,,/Files/yangdong/wdl/SCP/Integration/W202508090027545/03_integration/peanut_scVI_integrated.h5ad,,,,scVI,X_scVI,N,true,,
+test_peanut,,,,,,,,N,true,,
+test_peanut,,,,,,,,N,true,,
+test_peanut,,,,,,,,,true,,
+test_peanut,,,,,,,,,true,,
+test_peanut,,,,,,,,,true,,
+test_peanut,,,,,,,,,true,,

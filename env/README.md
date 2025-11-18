@@ -12,10 +12,14 @@
 |subtask|software|
 |-|-|
 |1_qc|`lapply(c("Seurat","DropletUtils","SoupX", "optparse"), library, character.only = T)`|
-||scanpy|
+||`import scanpy; import leidenalg; import scrublet`|
 |2_anno|`lapply(c("ggraph","igraph","tidyverse", "data.tree"), library, character.only = T)`|
 ||`lapply(c("dplyr","Seurat","HGNChelper", "optparse"), library, character.only = T)`|
 ||`lapply(c("scater","SingleR","SingleCellExperiment"), library, character.only = T)`|
+|03_integrate|`lapply(c("bbknnR", "patchwork", "SeuratData", "optparse", "magrittr"), library, character.only = T)`|
+||`lapply(c("rliger", "SeuratWrappers"), library, character.only = T)`|
+||`import harmonypy; import scvi`|
+|04_metaneighbor|`lapply(c("MetaNeighbor", "ambient", "ComplexHeatmap", "circlize"), library, character.only = T)`|
 
 <details> <summary> 查看机器 </summary>
 
@@ -64,7 +68,6 @@ conda activate scline
 conda install conda-forge::papermill -y
 conda install conda-forge::r-optparse -y
 conda install conda-forge::r-irkernel -y
-conda install conda-forge::r-rpresto -y
 conda install conda-forge::r-biocmanager -y
 conda install conda-forge::r-devtools -y
 conda install conda-forge::r-remotes
@@ -87,6 +90,28 @@ conda install conda-forge::r-tidyverse -y
 conda install conda-forge::r-ggraph -y
 conda install conda-forge::r-data.tree -y
 conda install bioconda::bioconductor-scater -y
+
+# 03_integrate
+Rscript -e 'install.packages("bbknnR")'
+conda install pwwang::r-seuratdata -y
+conda install bioconda::r-liger -y
+conda install pwwang::r-seuratwrappers -y
+conda install bioconda::harmonypy -y
+conda install conda-forge::scvi-tools -y
+# conda install bioconda::scib -y # python版本冲突
+pip install scib-metrics
+
+# 04_metaneighbor
+conda install bioconda::bioconductor-metaneighbor -y
+conda install r::r-ambient -y
+conda install bioconda::bioconductor-complexheatmap -y
+conda install conda-forge::r-circlize -y
+
+# 05_dea
+Rscript -e "install.packages('presto')"
+
+# 06_enrich
+conda install bioconda::bioconductor-clusterprofiler -y
 ```
 
 </details>
