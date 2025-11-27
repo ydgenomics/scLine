@@ -1,4 +1,4 @@
-# Date: 20250908 # Title: run_singler.R # Coder: ydgenomics
+# Date: 251121 # Title: run_singler.R # Coder: ydgenomics
 # Description: Using SingleR to annotate single-cell RNA-seq data based on a custom reference dataset.
 # Input: reference .rds has RNA, query .rds files, and a metadata key for clustering in the reference dataset
 # Image: Seurat-R-- /software/miniconda/envs/Seurat/bin/R
@@ -47,6 +47,13 @@ write_report({
   cat("First 10 genes in the reference dataset:\n")
   print(head(rownames(ref_seu), n=10))
   query_seu <- readRDS(input_query_rds)
+  seurat_pipeline <- function(seu){
+      seu <- NormalizeData(seu)
+      seu <- FindVariableFeatures(seu, nfeatures = 3000)
+      seu <- ScaleData(seu)
+      return(seu)
+  }
+  query_seu <- seurat_pipeline(query_seu)
   cat("\nQuery dataset loaded successfully.\n")
   print(query_seu)
   cat("First 10 genes in the Query dataset:\n")
@@ -155,3 +162,6 @@ dev.off()
 # Save the annotated query dataset
 output_query_rds <- paste0(prefix, "_singler.rds")
 saveRDS(seu, file = output_query_rds)
+
+output_anno_csv <- paste0(sub("\\.rds$", "", basename(input_query_rds)), "_anno.csv")
+write.csv(data.frame(barcode = rownames(seu@meta.data), anno = seu$singler), file = output_anno_csv, row.names = FALSE)

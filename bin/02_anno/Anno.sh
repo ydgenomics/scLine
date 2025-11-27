@@ -1,17 +1,31 @@
-input_file=$1
-input_csv=$2
-reduction_key=$3
+input_query_rds=$1
+cluster_key=$2
+rdsORcsv=$3 # "/data/work/group1.hr_sctype.rds" # "/data/work/scline/bin/02_anno/markergene.csv"
+umap_name=$4
+ref_cluster_key=$5
+anno_singler_r=$6
+plot_r=$7
+anno_sctype_r=$8
 
-ext="${input_file##*.}"
-echo "input file extension is: $ext"
-if [ "$ext" == "h5ad" ]; then
-    echo "Annotating .h5ad file ..."
-    /opt/conda/bin/python /Annos/Anno/v1.0.0/anno_csv.py \
-    --input_h5ad $input_file --input_csv $input_csv --reduction_key $reduction_key
-elif [ "$ext" == "rds" ]; then
-    echo "Annotating .rds file ..."
-    /opt/conda/bin/Rscript /Annos/Anno/v1.0.0/anno_csv.R \
-    --input_rds $input_file --input_csv $input_csv --reduction_key $reduction_key
+ext="${rdsORcsv##*.}"
+
+pwd=$(pwd)
+input_query_rds=("${input_query_rds[@]/#/$pwd/}")
+rdsORcsv=("${rdsORcsv[@]/#/$pwd/}")
+simple_path=$(basename "$input_query_rds" .rds)
+
+# mkdir -p anno
+# cd anno
+
+if [ "$ext" == "rds" ]; then
+    Rscript $anno_singler_r --input_ref_rds "$rdsORcsv" --ref_cluster_key "$ref_cluster_key" \
+    --input_query_rds "$input_query_rds" --query_cluster_key "$cluster_key" --umap_name "$umap_name"
+elif [ "$ext" == "csv" ]; then
+    Rscript $plot_r --input_rds "$input_query_rds" --markers_csv "$rdsORcsv" --cluster_key "$cluster_key"
+    Rscript $anno_sctype_r --input_marker_csv "$rdsORcsv" --input_query_rds "$input_query_rds" \
+    --cluster_key "$cluster_key" --umap_name "$umap_name"
+    mv report.txt "$simple_path"_report.txt
 else
-    echo "Error: Unsupported ext "$ext". Only '.h5ad' and '.rds' are supported."
+    echo "Unsupported file extension: $ext. Only 'rds' and 'csv' are supported."
+    exit 1
 fi

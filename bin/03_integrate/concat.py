@@ -1,4 +1,4 @@
-### Date: 250723
+### Date: 251121
 ### Image: harmony-py--
 ### Coder: ydgenomics
 
@@ -6,22 +6,19 @@ import pandas as pd
 import scanpy as sc
 import anndata as ad
 import sys
+import os
 
 files_txt_path = sys.argv[1]
-projects_txt_path = sys.argv[2]
-species=sys.argv[3]
-group_key=sys.argv[4] #"biosample"
+anno_csvs = sys.argv[2]
+projects_txt_path = sys.argv[3]
+species=sys.argv[4]
+group_key=sys.argv[5] #"biosample"
 
-with open(files_txt_path, 'r') as file:
-    file_content = file.read().strip()
-
-indataget = file_content.split(',')
+indataget = files_txt_path.split(' ')
 print(indataget)
-
-with open(projects_txt_path, 'r') as filen:
-    file_content = filen.read().strip()
-
-projects = file_content.split(',')
+anno_csvs = anno_csvs.split(' ')
+print(anno_csvs)
+projects = projects_txt_path.split(' ')
 print(projects)
 
 adatas={}
@@ -38,6 +35,12 @@ for i in range(len(indataget)):
         print("counts not exist in raw h5ad, .X as counts")
         value.layers["counts"] = value.X.copy()
     value.X = value.layers["counts"] #ensure concat used by raw data
+    csv_path = anno_csvs[i]
+    if os.path.isfile(csv_path) and csv_path.lower().endswith('.csv'):
+        df = pd.read_csv(csv_path)
+        df_idx = df.set_index('barcode')
+        value.obs['anno'] = df_idx.loc[value.obs_names, 'anno']
+        print(value.obs['anno'].unique())
     adatas[key] = value
 
 adata = ad.concat(adatas, label=group_key, join="inner") # 'inner' or 'outer'

@@ -1,4 +1,4 @@
-# Date: 250926
+# Date: 251120
 # Image: metaNeighbor-R--04 /opt/conda/bin/R
 # Reference: https://mp.weixin.qq.com/s/tVxalBWsxLn58RJkpb-PaQ
 # 基于RNA@counts做分析
@@ -7,10 +7,8 @@ library(MetaNeighbor)
 library(SummarizedExperiment)
 library(Seurat)
 library(SingleCellExperiment)
-library(ambient)
 library(grid)
 library(ComplexHeatmap)
-library(ggcor)
 library(circlize)
 library(ggplot2)
 library(optparse)

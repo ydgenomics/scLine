@@ -1,6 +1,7 @@
-### Date: 251010 run_scrublet.py
+### Date: 251126 run_scrublet.py
 ### Image: scrublet-py-- /opt/conda/bin/python
 ### Output: Marker_csv: gene, cluster, p_val_adj, avg_log2FC
+### 替换基因名中的_为-
 
 import numpy as np
 import pandas as pd
@@ -31,7 +32,7 @@ parser.add_argument('--input_mincells', type=int, default=3, help='Minimum numbe
 parser.add_argument('--mitogenes_csv', type=str, default="None_mito_genes.csv", help='CSV file with mitochondrial genes')
 parser.add_argument('--mito_threshold', type=float, default=5, help='Mitochondrial gene threshold')
 parser.add_argument('--n_hvg', type=int, default=3000, help='Number of highly variable genes')
-parser.add_argument('--rlst', type=str, default="0.2,0.5,0.8,1.0", help='Comma-separated list of resolutions for clustering')
+parser.add_argument('--rlst', type=str, default="0.2|0.5|0.8|1.0", help='Comma-separated list of resolutions for clustering')
 parser.add_argument('--doublet_threshold', type=float, default=0.2, help='Threshold for doublet score to filter cells')
 
 args = parser.parse_args()
@@ -169,7 +170,12 @@ def run_concat_plot(species, input_mingenes, input_mincells, group_key, sample_n
             adata_unsplice = complete_cells(adata_unsplice, all_cells)
             adata.layers['splice'] = adata_splice.X
             adata.layers['unsplice'] = adata_unsplice.X
-        
+
+        # # 原地替换：把基因名里的 '_' 全部变成 '-'
+        # adata.var_names = adata.var_names.str.replace('_', '-', regex=False)
+
+        # # 若担心冲突，可先做唯一性检查（可选）
+        # # adata.var_names_make_unique()
         # Rename cells to include sample key
         adata.obs_names = [f"{cell_name}_{key}" for cell_name in adata.obs_names]
         print(adata.obs_names[:10])
@@ -244,7 +250,7 @@ def run_concat_plot(species, input_mingenes, input_mincells, group_key, sample_n
     adata.obs['predicted_doublet'] = adata.obs['predicted_doublet'].astype('category')
     sc.pl.umap(adata, color=["leiden", "log1p_n_genes_by_counts", "predicted_doublet", "doublet_score"], ncols=2, save="_quality.pdf")
 
-    rlst = sorted(float(x) for x in filter(None, rlst.split(',')))
+    rlst = sorted(float(x) for x in filter(None, rlst.split('|')))
     resolutions = [f"leiden_res_{x:.2f}" for x in rlst]
     # Cluster
     for res in rlst:
@@ -266,7 +272,7 @@ def run_concat_plot(species, input_mingenes, input_mincells, group_key, sample_n
             marker['cluster'] = marker['group']
             marker['p_val_adj'] = marker['pvals_adj']
             marker['avg_log2FC'] = marker['logfoldchanges']
-            marker.to_csv(f"{output_dir}/{res}.markers.csv", index=False)
+            marker.to_csv(f"{output_dir}/{species}_{res}.csv", index=False)
         else:
             print(f"Skipping {res} as it has only one cluster")
     # Summary

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-TEMP=$(getopt -o b:g:f:s:u:l:e:c:m:t:n:r: --long biosample_value:,group_key:,filter_list:,splice_list:,unsplice_list:,sample_list:,input_mingenes:,input_mincells:,mitogenes_csv:,mito_threshold:,n_hvg:,rlst:,doublet_threshold:,rhotxt_list: -n "$0" -- "$@")
+TEMP=$(getopt -o b:g:f:s:u:l:e:c:m:t:n:r:d:o:p --long biosample_value:,group_key:,filter_list:,splice_list:,unsplice_list:,sample_list:,input_mingenes:,input_mincells:,mitogenes_csv:,mito_threshold:,n_hvg:,rlst:,doublet_threshold:,rhotxt_list:,run_scrublet_py: -n "$0" -- "$@")
 eval set -- "$TEMP"
 
 while true; do
@@ -18,6 +18,7 @@ while true; do
     -r|--rlst) rlst=$2; shift 2 ;;
     -d|--doublet_threshold) doublet_threshold=$2; shift 2 ;;
     -o|--rhotxt_list) rhotxt_list=$2; shift 2 ;;
+    -p|--run_scrublet_py) run_scrublet_py=$2; shift 2 ;;
     --) shift; break ;;
     *) echo "Internal error!"; exit 1 ;;
   esac
@@ -25,13 +26,23 @@ done
 
 # echo "biosample_value=$biosample_value  group_key=$group_key"
 
+# rhotxt_list=$(printf '%s\n' *.txt | paste -sd '|')
+
+pwd=$(pwd)
+
 # 1. 拆成数组
-IFS=, read -ra bv <<<"$biosample_value"
-IFS=, read -ra sl  <<<"$sample_list"
-IFS=, read -ra fl  <<<"$filter_list"
-IFS=, read -ra sp  <<<"$splice_list"
-IFS=, read -ra us  <<<"$unsplice_list"
-IFS=, read -ra rh  <<<"$rhotxt_list"
+IFS=' ' read -ra bv <<<"$biosample_value"
+IFS=' ' read -ra sl  <<<"$sample_list"
+IFS=' ' read -ra fl  <<<"$filter_list"
+IFS=' ' read -ra sp  <<<"$splice_list"
+IFS=' ' read -ra us  <<<"$unsplice_list"
+IFS=' ' read -ra rh  <<<"$rhotxt_list"
+
+fl=("${fl[@]/#/$pwd/}")
+sp=("${sp[@]/#/$pwd/}")
+us=("${us[@]/#/$pwd/}")
+rh=("${rh[@]/#/$pwd/}")
+
 
 # 检查长度是否一致
 if (( ${#bv[@]} != ${#sl[@]} || ${#sl[@]} != ${#fl[@]} )); then
@@ -72,15 +83,16 @@ for k in "${!grp_sl[@]}"; do
     echo "rhotxt_list=$rhotxt_list"
     
     mkdir $k; cd $k
-    /opt/conda/bin/python /WDL/Dataget/v1.2.3/run_scrublet.py \
+    python $run_scrublet_py \
     --biosample_value $k --group_key $group_key --filter_list $filter_list --splice_list $splice_list --unsplice_list $unsplice_list \
     --sample_list $sample_list --input_mingenes $input_mingenes --mitogenes_csv $mitogenes_csv --mito_threshold $mito_threshold \
     --input_mincells $input_mincells --n_hvg $n_hvg --rlst $rlst --doublet_threshold $doublet_threshold
-    mkdir temp
-    for c in $(echo $rhotxt_list | tr ',' ' '); do
-        cp $c ./temp
-    done
-    cat temp/*.txt >> summary.txt
-    rm -rf temp
+    # 一行完成：只挑选 *.txt 并追加到 summary.txt
+    printf '%s\n' $rhotxt_list | tr ',' '\n' | grep '\.txt$' | xargs cat >> summary.txt
     cd ..
 done
+
+mkdir -p qc
+# 去重后再复制
+unique_bv=($(echo "${bv[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+cp -r "${unique_bv[@]}" qc/

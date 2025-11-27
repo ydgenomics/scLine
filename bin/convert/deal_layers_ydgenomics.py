@@ -8,7 +8,7 @@ import re
 import argparse
 
 parser = argparse.ArgumentParser(description="Process h5ad layers.")
-parser.add_argument('--input_path', type=str, default="/data/work/0.peanut/annotation/three_layers/H1314_dataget_Anno_rename_threelayers.h5ad", help='Input h5ad file path')
+parser.add_argument('--input_path', type=str, default="/data/work/scline/output/qc/result/group1.h5ad", help='Input h5ad file path')
 parser.add_argument('--sctype', type=str, default="h5ad", help='Comma-separated list of assays')
 args = parser.parse_args()
 input_path = args.input_path
@@ -21,6 +21,7 @@ def get_single_layer_h5ad(input_path):
     if not hasattr(adata, 'layers') or 'counts' not in adata.layers:
         # 如果 .layers 属性不存在或 'counts' 层不存在，则创建 'counts' 层
         adata.layers['counts'] = adata.X.copy()
+    
     print(adata.layers.keys())
     # 提取文件名（不包括扩展名）
     basename = os.path.basename(input_path)
@@ -46,14 +47,13 @@ def get_single_layer_h5ad(input_path):
             print(f"Layer: {layer_name}, Saved to: {output_path}")
             saved_paths.append(output_path)
             saved_layers.append(layer_name)
+    
     # 将 saved_paths 保存为以逗号分隔的文本文件
     with open('saved_paths.txt', 'w') as f:
         f.write(','.join(saved_paths))
-
     # 将 saved_layers 保存为以逗号分隔的文本文件
     with open('saved_layers.txt', 'w') as f:
         f.write(','.join(saved_layers))
-
     print("Saved paths and layers to text files.")
     return saved_layers, saved_paths
 

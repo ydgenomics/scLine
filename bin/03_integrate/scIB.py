@@ -1,43 +1,60 @@
-# Date: 250723
+# Date: 251124
 # Image: /software/conda/Anaconda/bin/python 
 # Coder: ydgenomics(yangdong@genomics.cn)
+# [Add BRAS to Benchmarker as default, instead of regular silhouette batch](https://github.com/YosefLab/scib-metrics/pull/217)
 
 import numpy as np
 import scanpy as sc
 import matplotlib.pyplot as plt
 import webbrowser
 from scib_metrics.benchmark import Benchmarker, BioConservation, BatchCorrection
+import os
 import click
 
 @click.command()
-@click.argument("unintegrated_h5ad", type=click.Path(exists=True))
-@click.argument("integrated_file", type=click.Path(exists=True))
-@click.argument("methods_file", type=click.Path(exists=True))
-@click.argument("pcas_file", type=click.Path(exists=True))
-@click.argument("deals_file", type=click.Path(exists=True))
-@click.argument("tests_file", type=click.Path(exists=True))
+@click.option("--unintegrated_h5ad", type=str)
+@click.option('--integrated_file', type=str, default=None, help="NULL")
+@click.option('--methods_file', type=str, default=None, help="NULL")
+@click.option('--pcas_file', type=str, default=None, help="NULL")
+@click.option('--deals_file', type=str, default="N N N N N N", help="NULL")
+@click.option('--tests_file', type=str, default="true true true true true true true true true true", help="NULL")
 @click.option('--batch_key', type=str, default=None, help="Batch key")
-@click.option('--label_key', type=str, default=None, help="Storying the information of biological cell name")
-@click.option('--n_jobs', type=int, default=None, help="Number of jobs to use for parallelization of neighbor search")
-@click.argument("prefix", type=click.Path(exists=False), default="zimia")
+@click.option('--label_key', type=str, default="biosample", help="Storying the information of biological cell name")
+@click.option('--n_jobs', type=int, default=4, help="Number of jobs to use for parallelization of neighbor search")
+@click.option("--prefix", type=str, default="zimia")
 def main(unintegrated_h5ad, integrated_file, methods_file, pcas_file, deals_file, tests_file, batch_key, label_key, n_jobs, prefix):
-    # Read files and split by comma
-    with open(integrated_file, 'r') as file:
-        files = file.read().strip().split(',')
+    # split
+    files = integrated_file.strip().split(' ')
     print(len(files));print(files)
-    with open(methods_file, 'r') as file:
-        methods = file.read().strip().split(',')
-    methods=methods[0:len(files)];print(methods)
-    with open(pcas_file, 'r') as file:
-        pcas = file.read().strip().split(',')
-    pcas=pcas[0:len(files)];print(pcas)
-    with open(deals_file, 'r') as file:
-        deals = file.read().strip().split(',')
+    # methods = methods_file.strip().split(' ')
+    # methods=methods[0:len(files)];print(methods)
+    # pcas = pcas_file.strip().split(' ')
+    # pcas=pcas[0:len(files)];print(pcas)
+
+    import os
+    import shutil
+
+    h5ad2pca = {'_scVI':'X_scVI', '_harmony':'X_pca_harmony', '_rliger.INMF':'X_inmfnorm', '_SCTransform.CCA':'X_pca', '_SCTransform.harmony':'X_pca'}
+    # 仅保留“文件名里出现过的 h5ad2pca 键”
+    methods = []
+    for f in files:
+        name = os.path.splitext(os.path.basename(f))[0]
+        # 把第一个命中的键作为 methods 值
+        key = next((k for k in h5ad2pca if k in name), None)
+        if key:                       # 必须命中才保留
+            methods.append(key)
+
+    # pcas 与 methods 一一对应
+    pcas = [h5ad2pca[k] for k in methods]
+
+    print("methods:", methods)
+    print("pcas:", pcas)
+
+    deals = deals_file.strip().split(' ')
     deals=deals[0:len(files)];print(deals)
-    with open(tests_file, 'r') as file:
-        tests = file.read().strip().split(',')
+    tests = tests_file.strip().split(' ')
     print(tests)
-    
+
     out_benchpdf=prefix+"_scIB.pdf"; print(out_benchpdf)
     out_benchcsv=prefix+"_scIB.csv"; print(out_benchcsv)
     out_h5ad=prefix+"_scIB.h5ad"; print(out_h5ad)
@@ -82,7 +99,7 @@ def main(unintegrated_h5ad, integrated_file, methods_file, pcas_file, deals_file
     def str_to_bool(value):
         return value.lower() in ("true", "yes", "1", "on")
     biocons = BioConservation(isolated_labels=str_to_bool(tests[0]), nmi_ari_cluster_labels_leiden=str_to_bool(tests[1]), nmi_ari_cluster_labels_kmeans=str_to_bool(tests[2]), silhouette_label=str_to_bool(tests[3]), clisi_knn=str_to_bool(tests[4]))
-    bacorrec = BatchCorrection(silhouette_batch=str_to_bool(tests[5]), ilisi_knn=str_to_bool(tests[6]), kbet_per_label=str_to_bool(tests[7]), graph_connectivity=str_to_bool(tests[8]), pcr_comparison=str_to_bool(tests[9]))
+    bacorrec = BatchCorrection(bras=True, ilisi_knn=True, kbet_per_label=True, graph_connectivity=True, pcr_comparison=True)
     bm = Benchmarker(
         adata=orig_ad,
         batch_key=batch_key,
@@ -106,6 +123,25 @@ def main(unintegrated_h5ad, integrated_file, methods_file, pcas_file, deals_file
     print(df)
     df_transposed = df.transpose()
     df_transposed.to_csv(out_benchcsv, index=True)
+
+    total_scores = df_transposed.iloc[-1, :-1] 
+    best_method = total_scores.idxmax()
+    best_score  = total_scores.max()
+    print("最高分方法：", best_method)
+    print("得分：", best_score)
+
+    import os
+    import shutil
+
+    # 1. 找到 best_method 在 methods 里的位置
+    try:
+        idx = methods.index(best_method)
+        best_h5ad = files[idx]
+    except ValueError:
+        best_h5ad = unintegrated_h5ad   # 预先定义好的未整合文件路径
+
+    # 2. 复制到当前工作目录
+    shutil.copy(best_h5ad, os.getcwd())   # 目标文件名保持原样
 
 if __name__ == "__main__":
     main()

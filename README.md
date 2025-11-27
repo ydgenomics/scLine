@@ -1,97 +1,177 @@
 # **scLine**: **s**ingle-**c**ell analysis pipe**line**
 
----
+基于nextflow搭建的一个端到端、用户使用友好(Friendly)、可重复(Repeatable)、兼顾通用性(Universal)和灵活性(Flexible)的单细胞分析流程软件**scLine**。涵盖数据质控、自动化注释、数据整合去批次、差异分析、富集分析、数据格式转换和伪时序分析，支持一行代码跑整个流程，也支持按子流程需求运行，极大利用了nextflow高效的资源监管优势。
 
-- **目标**
-  - 解决单细胞数据的端到端的分析需求，用户友好、可重复性、高效率的流程软件
-    - 两组数据(对照实验)
-    - 时序数据
-- **流程设计**
-  - **环境配置**: 基于`git clone`获得**scLine**代码，使用conda安装各个软件/运行`00_env` [document](./env/README.md)
-  - **输入**: 最初输入为10X矩阵文件，若中间步骤报错，也支持从报错步开始运行
-  - **分析**
-    - 00_env: 环境检查和配置
-    - 01_qc: 质控(SoupX, scrublet)
-    - 02_anno: 样本注释(Manual:marker; Auto: singleR, sctype)
-    - 03_integrate: 分组数据整合(harmony, scVI, LIGER, CCA, BBKNN, scib-metrics)
-    - 04_metaneighbor: 群相似性(metaneighbor)
-    - 05_dea: 差异分析(Seurat/memento)
-    - 06_enrich: 富集分析(clusterprofiler/eggnog-mapper/go-figure)
-    - 07_pseudotime: 伪时序(cytotrace/dpt/palantir/cellrank2/Genes2Genes)
-    - 08_trajectory: 轨迹(monocle)
-    <!-- - 09_module: 模块(GeneNMF/hdWGCNA)
-    - 10_cellphone: 细胞通讯(plantphone)
-    - 11_grn: 转录调控网络(pySCENIC/IReNA) -->
+## Background
+
+
+## Pipeline
+- **环境配置**: 基于`git clone`获得**scLine**代码，使用conda安装各个软件 [document](./env/README.md)
+- **输入**: 最初输入为10X矩阵文件，若中间步骤报错，也支持从报错步开始运行
+- **分析**
+  <!-- - 01_qc: 质控(SoupX, scrublet)
+  - 02_anno: 样本注释(Manual:marker; Auto: singleR, sctype)
+  - 03_integrate: 分组数据整合(harmony, scVI, LIGER, CCA, scib-metrics)
+  - 04_metaneighbor: 群相似性(metaneighbor)
+  - 05_dea: 差异分析(Seurat: FindMarkers)
+  - 06_enrich: 富集分析(clusterprofiler, [Galaxy(website)](https://usegalaxy.eu/):eggnog-mapper)
+  - 07_pseudotime: 伪时序(cytotrace/cellrank2)
+  - 08_trajectory: 轨迹(monocle)
+  - 09_module: 模块(GeneNMF/hdWGCNA)
+  - 10_cellphone: 细胞通讯(plantphone)
+  - 11_grn: 转录调控网络(pySCENIC/IReNA) -->
+
+  |No.|subPipeline|Software|Details|
+  |-|-|-|-|
+  |01|QC|质控|[SoupX](https://github.com/constantAmateur/SoupX); [scrublet](https://github.com/swolock/scrublet)|
+  |02|ANNO|样本细胞注释|[SingleR](https://github.com/dviraran/SingleR); [ScType](https://github.com/IanevskiAleksandr/sc-type)|
+  |03|INTEGRATE|分组数据整合去批次|[harmony](https://github.com/immunogenomics/harmony); [scvi-tools](https://github.com/scverse/scvi-tools); [LIGER](https://github.com/welch-lab/liger); [CCA](https://crazyhottommy.github.io/single-cell-RNAseq-PCA-CCA-cell-annotation/how-seurat-cca-label-transfer.html); [scib-metrics](https://github.com/YosefLab/scib-metrics)|
+  |04|METANEIGHBOR|群相似性|[MetaNeighbor](https://github.com/maggiecrow/MetaNeighbor)|
+  |05|DEA|差异分析|[FindMarkers](https://satijalab.org/seurat/reference/findmarkers)|
+  |06|ENRICH|富集分析|[Galaxy(website)](https://usegalaxy.eu/):eggnog-mapper; [clusterProfiler](https://github.com/YuLab-SMU/clusterProfiler)|
+  |07|PSEUDOTIME|伪时序|[CytoTrace](https://cytotrace.stanford.edu/); [cellrank2](https://cellrank.readthedocs.io/en/latest/about/version2.html)|
 
   ```mermaid
   flowchart TB
-  01[01_qc] --- 01.1{doSoupX?}
+  01[QC] --- 01.1{runsoupx?}
   01.1 ---|yes| 01.2[SoupX] --- 01.3[scrublet]
   01.1 ---|no| 01.3
-  01.3 --- 01.4[convert] --- 01.5[merge]
-  01 ---> 04[04_metaneighbor]
-  01 ---> 06[06_enrich]
-  06 --- 06.1{haveProtein?} ---|yes| 06.2[eggnog-mapper] --- 06.3[clusterprofiler/gofigure]
-  01 --> 02[02_anno]
-  02 --- 02.1{haveRef?}
-  02.1 ---|yes| 02.2[singleR]
-  02 --- 02.3{haveMarker?} ---|yes| 02.4[scType]
-  02.2 --- 02.5[summary]
-  02.4 --- 02.5
-  02 --- 02.6[anno]
-  02 --> 03[03_integrate] --- 03.1[scVI,harmony,CCA,BBKNN,RLIGER] --- 03.2[scib-metrics]
-  03 --> 05[05_dea] --> 06
-  03 --> 07[07_pseudotime]
-  03 --> 08[08_trajectory]
+  01.3 --- 08[CONVERT]
+  01 ---> 06[ENRICH]
+  06 ---|emapper_xlsx| 06.1[makeOrgPackage] --- 06.2[clusterprofiler]
+  06 -.-|genes '.fasta' file| 06.3[Galaxy: eggnog-mapper] -.- 06.1
+  01 --> 02[ANNO]
+  08 --> 02
+  02 --- 02.1{rdsORcsv?}
+  02.1 ---|ref.rds| 02.2[singleR] --- 02.4[*anno.csv]
+  02.1 ---|marker.csv| 02.3[scType] --- 02.4
+  02.4 --> 03.0
+  02 --> 03[INTEGRATE] --- 03.0[concat] --- 03.1[scVI]
+  03.0 --- 03.2[harmony]
+  03.0 --- 03.3[CONVERT] --- 03.4[rliger] 
+  03.3 --- 03.5{runsct?} ---|yes| 03.6[SCT.CCA, SCT.harmony]
+  03.4 --- 03.7[CONVERT_1_int] --- 03.8[scib-metrics]
+  03.1 --- 03.8
+  03.2 --- 03.8
+  03.6 --- 03.9[CONVERT_2_int] --- 03.8
+  03 --> 04[METANEIGHBOR] --- 04.1[MetaNeighbor]
+  03 --> 05[DEA] --- 05.1[FindMarkers] 
+  05 --> 06
+  03 --> 07[PSEUDOTIME] --- 07.1[CytoTrace]
+  03.8 --> 07.1
   classDef mainNode fill:#ffcccc,stroke:#ff0000,stroke-width:3px
-  class 01,02,03,04,05,06,07,08 mainNode
+  class 01,02,03,04,05,06,07 mainNode
   ```
 
-  - **输出**
-    - 每个子分析单独生成一个文件夹，包含单细胞数据和可视化文件
-    - 输出运行记录`log.txt`，包含每步运行的时间和潜在的报错信息
-    - `what-to-cite.txt`输出引用信息
-  - **报错**: 每个子任务运行前检查输入文件是否完整，若问题输出报错和缺失信息
-  - **运行**
-    ```shell
-    # install scLine
-    git clone https://github.com/ydgenomics/scLine.git
-    # build env
-    sh scLine.sh --mode "00"
-    # run scLine
-    sh scLine.sh --mode "01|02" \
-    --raw_matrix "raw1|raw2|raw3|raw4" \
-    --filter_matrix "filter1|filter2|filter3|filter4" \
-    --biosample_list "group1|group1|group2|group2"
-    --sample_list "sample1|sample2|sample3|sample4"
-    --output_dir "./output"
+- **运行**
+  ```shell
+  nextflow run main.nf --mode all \
+  --rawPaths '/data/work/scline/input/sample1_raw_seed11_p10|/data/work/scline/input/sample1_raw_seed12_p10' \
+  --filterPaths '/data/work/scline/input/sample1_filter_seed11_p10|/data/work/scline/input/sample1_filter_seed12_p10' \
+  --biosampleValues 'group1|group1' \
+  --sampleValues 'sample1|sample2' \
+  --python_env '/opt/software/miniconda3/envs/scline/bin/python' \
+  --rdsORcsv '/data/work/scline/input/markergene.csv' \
+  --cluster_key 'leiden_res_0.50' \
+  --prefix 'example1' \
+  --other1_key 'biosample' \
+  --other2_key 'anno' \
+  --ident_1 'celltype2' --ident_2 'celltype3' \
+  --cluster_value 'celltype2' \
+  --outdir './output/example1' \
+  --runsoupx 'yes' \
+  --runsct 'yes' \
+  --emapper_xlsx '/data/work/scline/input/eggNOG_annotation.xlsx' \
+  --rlst '0.5'
+  ```
+- **输出**
+  - 每个子分析单独生成一个文件夹，包含单细胞数据和可视化文件
+  - 输出运行记录`*.log`，任务运行时间和资源使用见`execution-report.html`和`execution-timeline.html`
+  ```shell
+  
+  ```
+- **报错**: 每个子任务运行前检查必须输入文件是否完整，若问题输出报错和缺失信息
+- **帮助**: 通过`nextflow run main.nf --help`输出帮助信息(参数解释，输出示例)
+
+
+## Vignettes
+- **Instal & Setup**: 在云平台基于conda在同一个image配置多个conda环境
+- **Data**: 
+  - 下载[人PBMC数据](https://cellgeni.github.io/notebooks/html/new-10kPBMC-SoupX.html)基于随机取样构建测试数据 [matrix_random_sample.R]()
+  - 三种类型测试数据: 单一重复取样(example1), 处理对照取样(example2), 时序重复取样(example3) [./input]()
+    ```mermaid
+    flowchart TB
+    1[example1] -->|biosample:group1| 1.1[sample1]
+    1[example1] -->|biosample:group1| 1.2[sample2]
+    2[example2] -->|biosample:ctrl| 2.1.1[sample1]
+    2[example2] -->|biosample:ctrl| 2.1.2[sample2]
+    2[example2] -->|biosample:stim| 2.2.1[sample3]
+    2[example2] -->|biosample:stim| 2.2.2[sample4]
     ```
-- **软件测试**
-  - **环境测试**: 在云平台基于conda在同一个image配置多个conda环境
-  - **测试数据**: 
-    - 已发表的拟南芥数据 
-      - [【Stress Biology】单细胞RNA测序揭示了拟南芥愈伤组织形成的发育轨迹和环境调控](https://mp.weixin.qq.com/s/ZKYanCM-ZalgHteLOaJErw) 
-      - [Single-cell RNA sequencing reveals developmental trajectories and environmental regulation of callus formation in Arabidopsis](https://link.springer.com/article/10.1007/s44154-025-00255-4)
-    - 已发表的水稻数据(Molecular plant) [Comparative spatial transcriptomics reveals root drylandadaptationmechanisminriceand HMGB1 as a key regulator]()
-  - **运行scLine**
-    - 对照数据
-    - 时序数据
-- **参考资料**
-  |Software|Year|Article|
-  |-|-|-|
-  |**scDown**|2025|Sun, L., Ma, Q., Cai, C., Labaf, M., Jain, A., Dias, C., Rockowitz, S., & Sliz, P. (2025). scDown: A Pipeline for Single-Cell RNA-Seq Downstream Analysis. International journal of molecular sciences, 26(11), 5297. https://doi.org/10.3390/ijms26115297|
-  |SCMeTA|2024|Pan, X., Pan, S., Du, M., Yang, J., Yao, H., Zhang, X., & Zhang, S. (2024). SCMeTA: a pipeline for single-cell metabolic analysis data processing. Bioinformatics (Oxford, England), 40(9), btae545. https://doi.org/10.1093/bioinformatics/btae545|
-  |Panpipes|2024|Curion, F., Rich-Griffin, C., Agarwal, D., Ouologuem, S., Rue-Albrecht, K., May, L., Garcia, G. E. L., Heumos, L., Thomas, T., Lason, W., Sims, D., Theis, F. J., & Dendrou, C. A. (2024). Panpipes: a pipeline for multiomic single-cell and spatial transcriptomic data analysis. Genome biology, 25(1), 181. https://doi.org/10.1186/s13059-024-03322-7|
-  |MultiSC|2024|Lin, X., Jiang, S., Gao, L., Wei, Z., & Wang, J. (2024). MultiSC: a deep learning pipeline for analyzing multiomics single-cell data. Briefings in bioinformatics, 25(6), bbae492. https://doi.org/10.1093/bib/bbae492|
-  ||2023|Heumos, L., Schaar, A. C., Lance, C., Litinetskaya, A., Drost, F., Zappia, L., Lücken, M. D., Strobl, D. C., Henao, J., Curion, F., Single-cell Best Practices Consortium, Schiller, H. B., & Theis, F. J. (2023). Best practices for single-cell analysis across modalities. Nature reviews. Genetics, 24(8), 550–572. https://doi.org/10.1038/s41576-023-00586-w|
-  |**single-cell-best-practice**|2023-|https://www.sc-best-practices.org/|
-  |IBRAP|2023|Knight, C. H., Khan, F., Patel, A., Gill, U. S., Okosun, J., & Wang, J. (2023). IBRAP: integrated benchmarking single-cell RNA-sequencing analytical pipeline. Briefings in bioinformatics, 24(2), bbad061. https://doi.org/10.1093/bib/bbad061|
-  |**SCP**|2023|https://github.com/zhanghao-njmu/SCP|
-  ||2022|Bertolini, A., Prummer, M., Tuncel, M. A., Menzel, U., Rosano-González, M. L., Kuipers, J., Stekhoven, D. J., Tumor Profiler consortium, Beerenwinkel, N., & Singer, F. (2022). scAmpi-A versatile pipeline for single-cell RNA-seq analysis from basics to clinics. PLoS computational biology, 18(6), e1010097. https://doi.org/10.1371/journal.pcbi.1010097|
-  ||2021|Shaw, R., Tian, X., & Xu, J. (2021). Single-Cell Transcriptome Analysis in Plants: Advances and Challenges. Molecular plant, 14(1), 115–126. https://doi.org/10.1016/j.molp.2020.10.012|
-  ||2020|Ding, J., Adiconis, X., Simmons, S. K., Kowalczyk, M. S., Hession, C. C., Marjanovic, N. D., Hughes, T. K., Wadsworth, M. H., Burks, T., Nguyen, L. T., Kwon, J. Y. H., Barak, B., Ge, W., Kedaigle, A. J., Carroll, S., Li, S., Hacohen, N., Rozenblatt-Rosen, O., Shalek, A. K., Villani, A. C., … Levin, J. Z. (2020). Systematic comparison of single-cell and single-nucleus RNA-sequencing methods. Nature biotechnology, 38(6), 737–746. https://doi.org/10.1038/s41587-020-0465-8|
-  |**scTyper**|2020|Choi, J. H., In Kim, H., & Woo, H. G. (2020). scTyper: a comprehensive pipeline for the cell typing analysis of single-cell RNA-seq data. BMC bioinformatics, 21(1), 342. https://doi.org/10.1186/s12859-020-03700-5.|
-  |**SINCERA**|2015|Guo, M., Wang, H., Potter, S. S., Whitsett, J. A., & Xu, Y. (2015). SINCERA: A Pipeline for Single-Cell RNA-Seq Profiling Analysis. PLoS computational biology, 11(11), e1004575. https://doi.org/10.1371/journal.pcbi.1004575|
+    ```mermaid
+    flowchart TB
+    3[example3] -->|biosample:time1| 3.1.1[sample1]
+    3[example3] -->|biosample:time1| 3.1.2[sample2]
+    3[example3] -->|biosample:time2| 3.2.1[sample3]
+    3[example3] -->|biosample:time2| 3.2.2[sample4]
+    3[example3] -->|biosample:time3| 3.3.1[sample5]
+    3[example3] -->|biosample:time3| 3.3.2[sample6]
+    ```
+- **Run**
+- **A step-by-step guide**
+  <details> <summary><strong> 棉花数据复现 </strong></summary>
+
+  # [Single-cell transcriptome atlas identified novel regulators for pigment gland morphogenesis in cotton](https://doi.org/10.1111/pbi.14035)
+  陆地棉子叶（1周）的单细胞测序 。 Glanded代表CCRI12栽培种陆地棉，Glandless代表CCRI12突变体（无腺体）。 10X Genomics
+    - SRR31330970 Glanded
+    - SRR31330969 Glandless
+
+  ```shell
+  cd /data/work/Reference/Gossypium
+  prefetch SRR31330970 --max-size 120G
+  id="SRR31330970"
+  fastq-dump -O fastq/ --split-3 --gzip ./${id}/${id}.sra
+  fasterq-dump -O fastq/${id} --split-files -e 40 ./${id}/${id}.sra  --include-technical  -x
+  prefetch SRR31330969 --max-size 120G
+
+  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.gtf.gz
+  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_protein.faa.gz
+  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.fna.gz
+  ```
+
+  复现过程找到原文的参考基因组很困难，通过NCBI的refgenome来找，你们的基因名都是LOC命名方式，这些只是标识符，从标识符到相比更具意义的基因名有不少困难
+
+  pigment gland 色素腺体
+  cottonseed 棉籽
+  gossypol 棉子酚
+  derivative 派生物/衍生物
+  gland cotton ‘CCRI12’ and glandless cotton ‘CCRI12gl’
+  cotyledon 子叶
+  protoplast 原生质体
+
+  A total of 9186 individual cells, including 4790 cells from ‘CCRI12’ and 4396 cells from ‘CCRI12gl’, were obtained after cell filtering process (Figure S1, Table S1) and were divided into 12 clusters based on highly variable genes (Figure 1b, Figure S2).
+
+    
+  </details>
+
+- **Mode with 'all'**
+
+## Reference
+|Software|Year|Article|
+|-|-|-|
+|**scDown**|2025|Sun, L., Ma, Q., Cai, C., Labaf, M., Jain, A., Dias, C., Rockowitz, S., & Sliz, P. (2025). scDown: A Pipeline for Single-Cell RNA-Seq Downstream Analysis. International journal of molecular sciences, 26(11), 5297. https://doi.org/10.3390/ijms26115297|
+|SCMeTA|2024|Pan, X., Pan, S., Du, M., Yang, J., Yao, H., Zhang, X., & Zhang, S. (2024). SCMeTA: a pipeline for single-cell metabolic analysis data processing. Bioinformatics (Oxford, England), 40(9), btae545. https://doi.org/10.1093/bioinformatics/btae545|
+|Panpipes|2024|Curion, F., Rich-Griffin, C., Agarwal, D., Ouologuem, S., Rue-Albrecht, K., May, L., Garcia, G. E. L., Heumos, L., Thomas, T., Lason, W., Sims, D., Theis, F. J., & Dendrou, C. A. (2024). Panpipes: a pipeline for multiomic single-cell and spatial transcriptomic data analysis. Genome biology, 25(1), 181. https://doi.org/10.1186/s13059-024-03322-7|
+|MultiSC|2024|Lin, X., Jiang, S., Gao, L., Wei, Z., & Wang, J. (2024). MultiSC: a deep learning pipeline for analyzing multiomics single-cell data. Briefings in bioinformatics, 25(6), bbae492. https://doi.org/10.1093/bib/bbae492|
+||2023|Heumos, L., Schaar, A. C., Lance, C., Litinetskaya, A., Drost, F., Zappia, L., Lücken, M. D., Strobl, D. C., Henao, J., Curion, F., Single-cell Best Practices Consortium, Schiller, H. B., & Theis, F. J. (2023). Best practices for single-cell analysis across modalities. Nature reviews. Genetics, 24(8), 550–572. https://doi.org/10.1038/s41576-023-00586-w|
+|**single-cell-best-practice**|2023-|https://www.sc-best-practices.org/|
+|IBRAP|2023|Knight, C. H., Khan, F., Patel, A., Gill, U. S., Okosun, J., & Wang, J. (2023). IBRAP: integrated benchmarking single-cell RNA-sequencing analytical pipeline. Briefings in bioinformatics, 24(2), bbad061. https://doi.org/10.1093/bib/bbad061|
+|**SCP**|2023|https://github.com/zhanghao-njmu/SCP|
+||2022|Bertolini, A., Prummer, M., Tuncel, M. A., Menzel, U., Rosano-González, M. L., Kuipers, J., Stekhoven, D. J., Tumor Profiler consortium, Beerenwinkel, N., & Singer, F. (2022). scAmpi-A versatile pipeline for single-cell RNA-seq analysis from basics to clinics. PLoS computational biology, 18(6), e1010097. https://doi.org/10.1371/journal.pcbi.1010097|
+||2021|Shaw, R., Tian, X., & Xu, J. (2021). Single-Cell Transcriptome Analysis in Plants: Advances and Challenges. Molecular plant, 14(1), 115–126. https://doi.org/10.1016/j.molp.2020.10.012|
+||2020|Ding, J., Adiconis, X., Simmons, S. K., Kowalczyk, M. S., Hession, C. C., Marjanovic, N. D., Hughes, T. K., Wadsworth, M. H., Burks, T., Nguyen, L. T., Kwon, J. Y. H., Barak, B., Ge, W., Kedaigle, A. J., Carroll, S., Li, S., Hacohen, N., Rozenblatt-Rosen, O., Shalek, A. K., Villani, A. C., … Levin, J. Z. (2020). Systematic comparison of single-cell and single-nucleus RNA-sequencing methods. Nature biotechnology, 38(6), 737–746. https://doi.org/10.1038/s41587-020-0465-8|
+|**scTyper**|2020|Choi, J. H., In Kim, H., & Woo, H. G. (2020). scTyper: a comprehensive pipeline for the cell typing analysis of single-cell RNA-seq data. BMC bioinformatics, 21(1), 342. https://doi.org/10.1186/s12859-020-03700-5.|
+|**SINCERA**|2015|Guo, M., Wang, H., Potter, S. S., Whitsett, J. A., & Xu, Y. (2015). SINCERA: A Pipeline for Single-Cell RNA-Seq Profiling Analysis. PLoS computational biology, 11(11), e1004575. https://doi.org/10.1371/journal.pcbi.1004575|
 
 ---
 

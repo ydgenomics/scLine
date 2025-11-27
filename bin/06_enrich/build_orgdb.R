@@ -1,4 +1,4 @@
-# Date: 20250711 # Image: enrich-R--04
+# Date: 251126 # Image: enrich-R--04
 # Description: build_orgdb.R--This script is used to build orgdb database for peanut
 # Included: Four functions: main(required), deal_go_obo(required), build_orgdb(required), build_go_gmt(required), build_ko_gmt(required)
 # Output: org.Ahypogaea.eg.db/db file
@@ -20,12 +20,12 @@ library(jsonlite)
 library(optparse)
 
 option_list <- list(
-    make_option(c("-e", "--emapper_xlsx"), type = "character", default = "/data/work/0.peanut/orgdb/out.emapper.annotations.xlsx", help = "Path to emapper annotations xlsx file", metavar = "character"),
-    make_option(c("--go_obo"), type = "character", default = "/data/users/yangdong/yangdong_8632f88957bb4c4f85daf59edaf6b059/online/go-figure/data/go.obo", help = "Go info .obo file", metavar = "character"),
-    make_option(c("-k", "--ko_json"), type = "character", default = "/data/work/0.peanut/orgdb/ko00001.json", help = "Path to KEGG ko JSON file", metavar = "character"),
-    make_option(c("-t", "--taxid"), type = "character", default = "3818", help = "Taxonomy ID", metavar = "character"),
-    make_option(c("-g", "--genus"), type = "character", default = "Arachis", help = "Genus name", metavar = "character"),
-    make_option(c("-s", "--species"), type = "character", default = "hypogaea", help = "Species name", metavar = "character")
+    make_option(c("-e", "--emapper_xlsx"), type = "character", default = "/data/work/scline/input/Galaxy6.xlsx", help = "Path to emapper annotations xlsx file", metavar = "character"),
+    make_option(c("--go_obo"), type = "character", default = "/data/work/scline/bin/06_enrich/go_obo_result.csv", help = "Go info .obo file", metavar = "character"),
+    make_option(c("-k", "--ko_json"), type = "character", default = "/data/work/scline/bin/06_enrich/ko00001.json", help = "Path to KEGG ko JSON file", metavar = "character"),
+    make_option(c("-t", "--taxid"), type = "character", default = "1111", help = "Taxonomy ID", metavar = "character"),
+    make_option(c("-g", "--genus"), type = "character", default = "Genus", help = "Genus name", metavar = "character"),
+    make_option(c("-s", "--species"), type = "character", default = "species", help = "Species name", metavar = "character")
 )
 
 opt_parser <- OptionParser(option_list = option_list)
@@ -36,6 +36,9 @@ ko_json <- opt$ko_json # Download the ko.json file from KEGG website[https://www
 taxid <- opt$taxid
 genus <- opt$genus
 species <- opt$species
+
+genus <- paste0(toupper(substr(genus, 1, 1)), tolower(substring(genus, 2)))
+print(genus)
 
 deal_go_obo <- function(go_obo, output_csv = "go_obo_result.csv") {
   # 读取文件内容
@@ -233,31 +236,32 @@ main <- function(
 ) {
   message("Starting OrgDb build process...")
   message("Processing GO OBO file...")
-  go_obo_df <- deal_go_obo(go_obo) # 处理go_obo文件，生成go_obo_result.csv
+  # go_obo_df <- deal_go_obo(go_obo) # 处理go_obo文件，生成go_obo_result.csv
+  go_obo_df <- read.csv(go_obo, header = TRUE, stringsAsFactors = FALSE)
   message("GO OBO file processed successfully.")
   message("Building OrgDb database...")
   go_ko <- build_orgdb(emapper_xlsx, ko_json, taxid, genus, species)
   message("OrgDb database built successfully.")
-  message("Getting .Orgdb file...")
-  db_name <- paste0("org.", substr(genus, 1, 1), species, ".eg.db"); print(db_name)
-  db_sqlite <- paste0("org.", substr(genus, 1, 1), species, ".eg.sqlite"); print(db_sqlite)
-  out_orgdb <- paste0(substr(genus, 1, 1), species, ".Orgdb"); print(out_orgdb)
-  orgdb <- loadDb(paste0(db_name, "/inst/extdata/", db_sqlite))
-  keytypes(orgdb)  # 查看这个数据库中有哪几种keytypes
+  # message("Getting .Orgdb file...")
+  # db_name <- paste0("org.", substr(genus, 1, 1), species, ".eg.db"); print(db_name)
+  # db_sqlite <- paste0("org.", substr(genus, 1, 1), species, ".eg.sqlite"); print(db_sqlite)
+  # out_orgdb <- paste0(substr(genus, 1, 1), species, ".Orgdb"); print(out_orgdb)
+  # orgdb <- loadDb(paste0(db_name, "/inst/extdata/", db_sqlite))
+  # keytypes(orgdb)  # 查看这个数据库中有哪几种keytypes
   #  [1] "EVIDENCE"    "EVIDENCEALL" "GENENAME"    "GID"         "GO"         
   #  [6] "GOALL"       "Ko"          "ONTOLOGY"    "ONTOLOGYALL" "Pathway"    
-  length(keys(orgdb)) #查看包含的基因数量
+  # length(keys(orgdb)) #查看包含的基因数量
   # [1] 68781
-  columns(orgdb)  #查看OrgDb对象的数据类型
+  # columns(orgdb)  #查看OrgDb对象的数据类型
   #  [1] "EVIDENCE"    "EVIDENCEALL" "GENENAME"    "GID"         "GO"         
   #  [6] "GOALL"       "Ko"          "ONTOLOGY"    "ONTOLOGYALL" "Pathway" 
-  saveDb(orgdb,file=out_orgdb) #把Capra_hircus对象保存成Capra_hircus.OrgDb文件。
-  gene2go <- go_ko$gene2go
-  gene2ko <- go_ko$gene2ko
-  message("Starting go_gmt build process...")
-  build_go_gmt(gene2go, go_obo_df, genus, species)
-  message("Starting ko_gmt build process...")
-  build_ko_gmt(gene2ko, genus, species)
+  # saveDb(orgdb,file=out_orgdb) #把Capra_hircus对象保存成Capra_hircus.OrgDb文件。
+  # gene2go <- go_ko$gene2go
+  # gene2ko <- go_ko$gene2ko
+  # message("Starting go_gmt build process...")
+  # build_go_gmt(gene2go, go_obo_df, genus, species)
+  # message("Starting ko_gmt build process...")
+  # build_ko_gmt(gene2ko, genus, species)
 }
 
 main(emapper_xlsx, ko_json, go_obo, taxid, genus, species)

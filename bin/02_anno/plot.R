@@ -48,7 +48,7 @@ print(colnames(seu@meta.data))
 
 
 cell_markers <- read.csv(markers_csv)
-cell_markers = cell_markers[cell_markers$tissueType == cell_type,] 
+# cell_markers = cell_markers[cell_markers$tissueType == cell_type,] 
 cell_markers$geneSymbolmore1 = gsub(" ","",cell_markers$geneSymbolmore1); cell_markers$geneSymbolmore2 = gsub(" ","",cell_markers$geneSymbolmore2)
 cell_markers$geneSymbolmore1 = gsub("///",",",cell_markers$geneSymbolmore1);cell_markers$geneSymbolmore1 = gsub(" ","",cell_markers$geneSymbolmore1)
 cell_markers$geneSymbolmore2 = gsub("///",",",cell_markers$geneSymbolmore2);cell_markers$geneSymbolmore2 = gsub(" ","",cell_markers$geneSymbolmore2)

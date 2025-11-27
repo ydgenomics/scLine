@@ -1,7 +1,8 @@
-### Date: 251010 run_soupx.R
+### Date: 251126 run_soupx.R
 ### Image: SoupX-R--03 /opt/conda/bin/R
 ### Coder: ydgenomics
 ### Reference: https://rawcdn.githack.com/constantAmateur/SoupX/204b602418df12e9fdb4b68775a8b486c6504fe4/inst/doc/pbmcTutorial.html
+### 鉴于Seurat要求基因名必须为-，而不能为_的要求。但是也有潜在的风险，例如当两个基因的差别就在于-和_的差别时，应该很少吧。！！！确定FHVG卡住不是因为符号的原因，原因未知
 
 
 library(Seurat)
@@ -29,9 +30,9 @@ run_soupx <- function(raw_path, filter_path, sample_name, input_mingenes, tfidfM
     options(future.globals.maxSize = 100000 * 1024^3)
     toc <- Read10X(filter_path, gene.column=1)
     # Because CreateSeuratObject() will replace '_' as '-', in order to keep raw genes' name
-    gene_names <- rownames(toc); head(gene_names)
+    gene_names <- rownames(toc); head(gene_names) #
     all <- CreateSeuratObject(toc)
-    rownames(all) <- gene_names; head(rownames(all))
+    rownames(all) <- gene_names; head(rownames(all)) #
     all <- subset(all, subset = nFeature_RNA > input_mingenes)
     all <- NormalizeData(all, normalization.method = "LogNormalize", scale.factor = 10000)
     all <- FindVariableFeatures(all, selection.method = "vst", nfeatures = 3000)
@@ -46,9 +47,9 @@ run_soupx <- function(raw_path, filter_path, sample_name, input_mingenes, tfidfM
     toc <- GetAssayData(object = all, layer = "counts", assay = "RNA")
 
     tod <- Read10X(raw_path, gene.column=1)
-    gene_names <- rownames(tod); head(gene_names)
+    gene_names <- rownames(tod); head(gene_names) ####
     raw <- CreateSeuratObject(tod)
-    rownames(raw) <- gene_names; head(rownames(raw))
+    rownames(raw) <- gene_names; head(rownames(raw)) ####
     tod <- GetAssayData(object = raw, layer = "counts", assay = "RNA")
     tod <- tod[rownames(all),]
 

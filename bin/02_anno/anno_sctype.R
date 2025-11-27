@@ -1,4 +1,4 @@
-# Date: 250903 anno_sctype.R
+# Date: 251121 anno_sctype.R
 # Description: Using sctype to annotate single-cell RNA-seq data based on marker gene csv.
 # Input: marker_csv file, query .rds file, cluster key in query .rds object, and UMAP reduction name
 # Output: "_sctype.rds" and "_sctype_umap.pdf" files
@@ -39,7 +39,7 @@ n_circle <- opt$n_circle # 'n_circle' added by ydgenomics to adjust the display 
 gene_sets_prepare <- function(path_to_db_file, cell_type){
   #cell_markers = openxlsx::read.xlsx(path_to_db_file)
   cell_markers = read.csv(path_to_db_file) # 之前的读取xlsx文件有点不好编辑，改为读取csv文件
-  cell_markers = cell_markers[cell_markers$tissueType == cell_type,] 
+  # cell_markers = cell_markers[cell_markers$tissueType == cell_type,] 
   cell_markers$geneSymbolmore1 = gsub(" ","",cell_markers$geneSymbolmore1); cell_markers$geneSymbolmore2 = gsub(" ","",cell_markers$geneSymbolmore2)
   cell_markers$geneSymbolmore1 = gsub("///",",",cell_markers$geneSymbolmore1);cell_markers$geneSymbolmore1 = gsub(" ","",cell_markers$geneSymbolmore1)
   cell_markers$geneSymbolmore2 = gsub("///",",",cell_markers$geneSymbolmore2);cell_markers$geneSymbolmore2 = gsub(" ","",cell_markers$geneSymbolmore2)
@@ -111,6 +111,13 @@ sctype_score <- function(scRNAseqData, scaled = !0, gs, gs2 = NULL, gene_names_t
 #' Run ScType for cell type annotation
 
 seu <- readRDS(input_query_rds)
+seurat_pipeline <- function(seu){
+  seu <- NormalizeData(seu)
+  seu <- FindVariableFeatures(seu, nfeatures = 3000)
+  seu <- ScaleData(seu)
+  return(seu)
+}
+seu <- seurat_pipeline(seu)
 if ("sctype" %in% colnames(seu@meta.data)) {
   seu$sctype0 <- seu$sctype
 }
@@ -290,3 +297,7 @@ dev.off()
 
 print(colnames(seu@meta.data))
 saveRDS(seu, output_query_rds)
+
+# add anno csv
+output_anno_csv <- paste0(sub("\\.rds$", "", basename(input_query_rds)), "_anno.csv")
+write.csv(data.frame(barcode = rownames(seu@meta.data), anno = seu$sctype), file = output_anno_csv, row.names = FALSE)

@@ -1,8 +1,9 @@
-### Date: 250812 rliger.INMF_integration.R
+### Date: 251121 rliger.INMF_integration.R
 ### Image: integration-R-- /opt/conda/bin/R
 ### Coder: ydgenomics
 ### Ref: https://welch-lab.github.io/liger/articles/Integrating_multi_scRNA_data.html#r-session-info 
 ### https://github.com/Papatheodorou-Group/BENGAL/blob/main/bin/rliger_integration_UINMF_multiple_species.R
+### https://welch-lab.github.io/liger/articles/Integrating_multi_scRNA_data.html
 
 library(rliger)
 library(Seurat)
@@ -55,15 +56,17 @@ resolution_set <- opt$ resolution_set
 obj <- readRDS(input_rds)
 obj <- obj %>% NormalizeData() %>% FindVariableFeatures() %>% ScaleData(split.by = batch_key, do.center = FALSE)
 # LIGER
-obj <- RunOptimizeALS(obj, k = 30, lambda = 5, split.by = batch_key)
-obj <- RunQuantileNorm(obj, split.by = batch_key)
+# obj <- RunOptimizeALS(obj, k = 30, lambda = 5, split.by = batch_key)
+obj <- runIntegration(obj, k = 30, lambda = 5, split.by = batch_key)
+# obj <- RunQuantileNorm(obj, split.by = batch_key)
+obj <- alignFactors(obj, method = "centroidAlign")
 names(obj@reductions)
 #obj <- FindNeighbors(obj, reduction = "iNMF_raw", k.param = 10, dims = 1:30)
-obj <- FindNeighbors(obj, reduction = "iNMF", k.param = 10, dims = 1:30)
+obj <- FindNeighbors(obj, reduction = "inmfNorm", k.param = 10, dims = 1:30)
 obj <- FindClusters(obj, resolution = resolution_set, cluster.name = "celltype")
 # Dimensional reduction and plotting
 #obj <- RunUMAP(obj, dims = 1:ncol(obj[["iNMF_raw"]]), reduction = "iNMF_raw", n_neighbors = 15L,  min_dist = 0.3)
-obj <- RunUMAP(obj, dims = 1:ncol(obj[["iNMF"]]), reduction = "iNMF", n_neighbors = 15L)
+obj <- RunUMAP(obj, dims = 1:ncol(obj[["inmfNorm"]]), reduction = "inmfNorm", n_neighbors = 15L)
 #obj <- RunUMAP(obj, reduction = "iNMF", n_neighbors = 30, min_dist = 0.3)
 #for below scib_test
 obj@reductions$pca <- obj@reductions$iNMF

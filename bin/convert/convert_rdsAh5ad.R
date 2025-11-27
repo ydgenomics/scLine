@@ -1,4 +1,4 @@
-### Date: 250819 convert_rdsAh5ad.R
+### Date: 251120 convert_rdsAh5ad.R
 ### Description: A founction (using sceasy(R) and schardto convert single-cell data between rds and h5ad)
 ### Image: sceasy-schard /software/conda/Anaconda/bin/R /opt/conda/bin/python
 ### Reference: Â© EMBL-European Bioinformatics Institute, 2023 Yuyao Song <ysong@ebi.ac.uk>
@@ -12,14 +12,14 @@ library(schard)
 packageVersion("Seurat")
 library(optparse)
 
-convert_rdsAh5ad <- function(input_path, assay = "RNA", main_layer = "counts") {
+convert_rdsAh5ad <- function(input_path, assay = "RNA", main_layer = "counts", python_env = "/opt/conda/bin/python") {
     ext <- tools::file_ext(input_path)
     print(paste0("input file extension is : ", ext))
     if (ext == "rds") {
         file_name <- basename(input_path)
         output_path <- sub("\\.rds$", ".rh.h5ad", file_name)
         message(paste0("from seurat to anndata, input: ", input_path))
-        use_python("/opt/conda/bin/python")
+        use_python(python_env)
         loompy <- reticulate::import("loompy")
         temp0 <- readRDS(input_path)
         print(temp0)

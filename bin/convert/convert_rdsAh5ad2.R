@@ -1,4 +1,4 @@
-### Date: 251011 convert_rdsAh5ad2.R
+### Date: 251126 convert_rdsAh5ad2.R
 ### Description: Focusing on converting object of multiple layers.
 ### Image: sceasy-schard /software/conda/Anaconda/bin/R
 ### Reference: Â© EMBL-European Bioinformatics Institute, 2023 Yuyao Song <ysong@ebi.ac.uk>
@@ -20,11 +20,24 @@ option_list <- list(
   make_option(
     c("-l", "--layers"), type = "character",
     default = "RNA",
-    help = "Layers to be converted, default is RNA")
+    help = "Layers to be converted, default is RNA"),
+  make_option(
+    c("-r", "--convert_rdsAh5ad_r"), type = "character",
+    default = "/WDL/Convert/v1.0.1/convert_rdsAh5ad.R",
+    help = "Path to convert_rdsAh5ad.R"),
+  make_option(
+    c("-p", "--python_env"), type = "character",
+    default = "/opt/conda/bin/python",
+    help = "Path to python environment")
 )
+
 opt <- parse_args(OptionParser(option_list = option_list))
 input_path <- opt$input_file
 layers <- opt$layers
+convert_rdsAh5ad_r <- opt$convert_rdsAh5ad_r
+python_env <- opt$python_env
+
+
 ext <- tools::file_ext(input_path)
 print(paste0("input file extension is : ", ext))
 layers <- unlist(strsplit(layers, ",")); print(paste0("layers to be converted: ", paste(layers, collapse = ",")))
@@ -33,7 +46,7 @@ layers <- unlist(strsplit(layers, ",")); print(paste0("layers to be converted: "
 if (ext == "rds") {
     message(paste0("from seurat to anndata, input: ", input_path))
     # Using reticulate to call Python
-    use_python("/opt/conda/bin/python")
+    use_python(python_env)
     loompy <- reticulate::import("loompy")
     temp0 <- readRDS(input_path)
     # Check '_index' in meta.data and meta.features
@@ -87,7 +100,7 @@ if (ext == "rds") {
     file_name <- basename(input_path)
     output_path <- sub("\\.h5ad$", ".hr.rds", file_name)
     message(paste0("from anndata to seurat, input: ", input_path))
-    source("/WDL/Convert/v1.0.1/convert_rdsAh5ad.R")
+    source(convert_rdsAh5ad_r)
     # 调用 Python 函数
     saved_layers <- unlist(strsplit(readLines("saved_layers.txt"), ","))
     if ("counts" %in% saved_layers) {saved_layers[saved_layers == "counts"] <- "RNA"}; print(saved_layers)
@@ -106,7 +119,7 @@ if (ext == "rds") {
     rds_paths <- c()
     for (path in filtered_saved_paths) {
         cat("Processing file:", path, "\n")
-        rds_path <- convert_rdsAh5ad(path)
+        rds_path <- convert_rdsAh5ad(input_path = path, assay = "RNA", main_layer = "counts", python_env = python_env)
         rds_paths <- c(rds_paths, rds_path)
     }
     print(rds_paths)
@@ -119,9 +132,9 @@ if (ext == "rds") {
             seu2 <- readRDS(rds_paths[i])
             saved_layer <- saved_layers[i]
             rna_data <- GetAssayData(seu2, assay = "RNA", layer = "counts")
-            gene_names <- rownames(rna_data); head(gene_names)
+            gene_names <- rownames(rna_data); head(gene_names) #####
             other_assay <- CreateAssayObject(counts = rna_data, meta.data = seu2@meta.data, name = saved_layer)
-            rownames(other_assay) <- gene_names; head(rownames(other_assay))
+            rownames(other_assay) <- gene_names; head(rownames(other_assay)) #####
             seu[[saved_layer]] <- other_assay
             cat(sprintf("Layer: %s, Added to Seurat object\n", saved_layer))
         }   
