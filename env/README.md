@@ -67,7 +67,8 @@ apt install wget
 wget --version
 mkdir software; cd software
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh # install miniconda
-bash Miniconda3-latest-Linux-x86_64.sh # will installed on ~/miniconda3
+# bash Miniconda3-latest-Linux-x86_64.sh # will installed on ~/miniconda3
+bash Miniconda3-latest-Linux-x86_64.sh -b -p /software
 source /software/miniconda/bin/activate
 # conda config --set auto_activate_base false
 ```
@@ -76,9 +77,43 @@ source /software/miniconda/bin/activate
 
 <details> <summary> 安装java再基于java安装nextflow </summary>
 
+Python 3 and R image镜像
 ```shell
 # https://www.nextflow.io/docs/latest/install.html
+# [华大云平台Python 3 and R image镜像Centos7的yum配置修改看这个](https://developer.aliyun.com/article/1575375)
+# yum install zip -y
+curl -s "https://get.sdkman.io" | bash
+source "/home/stereonote/.sdkman/bin/sdkman-init.sh"
+sdk install java 17.0.10-tem
+java -version
 
+curl -s https://get.nextflow.io | bash
+
+chmod +x nextflow
+
+# 创建本地bin目录（如果不存在）
+mkdir -p $HOME/.local/bin/
+
+# 将nextflow移动到该目录
+mv nextflow $HOME/.local/bin/
+
+# 将$HOME/.local/bin/添加到PATH环境变量（如果还没有的话）
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> $HOME/.bashrc
+
+# 重新加载bash配置
+source $HOME/.bashrc
+
+# 验证安装
+nextflow -version
+
+# # 修改JAR文件的所有者为stereonote用户
+# chown stereonote:stereonote /home/stereonote/.nextflow/framework/25.10.0/nextflow-25.10.0-one.jar
+
+# # 修改文件权限，让所有者有读写权限，其他用户有读权限
+# chmod 644 /home/stereonote/.nextflow/framework/25.10.0/nextflow-25.10.0-one.jar
+
+# # 验证权限修改
+# ls -la /home/stereonote/.nextflow/framework/25.10.0/nextflow-25.10.0-one.jar
 ```
 
 </details>
@@ -149,11 +184,11 @@ conda install bioconda::bioconductor-keggrest -y
 conda install bioconda::bioconductor-annotationforge -y
 Rscript -e 'install.packages("openxlsx", repos="https://cloud.r-project.org")' # install failed with conda
 
-# recall
-conda install bioconda::bioconductor-scdesign3 -y
-conda install r::r-lamw -y
-Rscript -e "install.packages('knockoff')"
-Rscript -e 'install.packages("countsplit")'
+# # recall
+# conda install bioconda::bioconductor-scdesign3 -y
+# conda install r::r-lamw -y
+# Rscript -e "install.packages('knockoff')"
+# Rscript -e 'install.packages("countsplit")'
 ```
 
 # scib
@@ -191,7 +226,7 @@ conda create -n convert r-seurat=4.4 r-devtools python=3.11 -y
 conda activate convert
 conda install -c conda-forge scanpy -y
 conda install bioconda::r-sceasy -y
-# Rscript -e 'devtools::install_github("cellgeni/schard")'
+# Rscript -e 'devtools::install_github("cellgeni/schard")' # fail
 wget https://github.com/cellgeni/schard/archive/refs/heads/main.zip
 Rscript -e 'devtools::install_local("main.zip")'
 rm main.zip
