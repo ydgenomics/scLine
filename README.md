@@ -1,5 +1,5 @@
 <br>
-<a href ="https://github.com/ydgenomics/scLine"><img src="scLine.log2.png" width="200px" align="left" /></a>
+<a href ="https://github.com/ydgenomics/scLine"><img src="scLine.log2.png" width="200px" align="right" /></a>
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -8,8 +8,6 @@
 
 <br>
 
-
----
 
 ## Install
 ```shell
