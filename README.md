@@ -13,20 +13,9 @@
 
 涵盖数据质控、自动化注释、数据整合去批次、差异分析、富集分析、数据格式转换和伪时序分析，支持一行代码跑整个流程，也支持按子流程需求运行，极大利用了 nextflow 高效的资源监管优势。
 
-<div style="display: flex; align-items: flex-start; gap: 30px;">
-<div style="flex-shrink: 0;">
-<img src="scLine.log2.png" alt="logo" width="300">
-</div>
-<div>
-
-# scLine
-
-基于 nextflow 搭建的一个端到端、用户使用友好(Friendly)、可重复(Repeatable)、兼顾通用性(Universal)和灵活性(Flexible)的单细胞分析流程软件。
-
-涵盖数据质控、自动化注释、数据整合去批次、差异分析、富集分析、数据格式转换和伪时序分析，支持一行代码跑整个流程，也支持按子流程需求运行，极大利用了 nextflow 高效的资源监管优势。
-
-</div>
-</div>
+</td>
+</tr>
+</table>
 
 ---
 
