@@ -60,8 +60,8 @@ nextflow run main.nf --help
 ## Pipeline
 - **环境配置**: 在云平台基于conda在同一个image配置多个conda环境。基于`git clone`获得**scLine**代码，使用conda安装各个软件 [document](./env/README.md)。
 - **测试数据**: 
-  - 下载[人PBMC数据](https://cellgeni.github.io/notebooks/html/new-10kPBMC-SoupX.html)基于随机取样构建测试数据 [matrix_random_sample.R]()
-  - 三种类型测试数据: 单一重复取样(example1), 处理对照取样(example2), 时序重复取样(example3) [./input]()
+  - 下载[人PBMC数据](https://cellgeni.github.io/notebooks/html/new-10kPBMC-SoupX.html)基于随机取样构建测试数据 [matrix_random_sample.R](./input/matrix_random_sample.R)
+  - 三种类型测试数据: 单一重复取样(example1), 处理对照取样(example2), 时序重复取样(example3) [input](./input)
     ```mermaid
     flowchart TB
     1[example1] -->|biosample:group1| 1.1[sample1]
@@ -80,6 +80,8 @@ nextflow run main.nf --help
     3[example3] -->|biosample:time3| 3.3.1[sample5]
     3[example3] -->|biosample:time3| 3.3.2[sample6]
     ```
+  - 使用Galaxy对蛋白质序列进行功能注释用于富集分析，下载Galaxy结果后做处理转为.xlsx文件 [galaxy_eggnogmapper.R](./input/galaxy_eggnogmapper.R)
+    
 - **输入**: 最初输入为10X矩阵文件，若中间步骤报错，也支持从报错步开始运行
 - **分析**
   <!-- - 01_qc: 质控(SoupX, scrublet)
