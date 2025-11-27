@@ -1,8 +1,89 @@
 # **scLine**: **s**ingle-**c**ell analysis pipe**line**
 
-基于nextflow搭建的一个端到端、用户使用友好(Friendly)、可重复(Repeatable)、兼顾通用性(Universal)和灵活性(Flexible)的单细胞分析流程软件**scLine**。涵盖数据质控、自动化注释、数据整合去批次、差异分析、富集分析、数据格式转换和伪时序分析，支持一行代码跑整个流程，也支持按子流程需求运行，极大利用了nextflow高效的资源监管优势。
+<div style="display: flex; align-items: center; gap: 30px; border: none;">
+<div style="flex: 1; border: none;">
+<img src="scLine.log2.png" alt="logo" style="max-width: 100%; border: none;">
+</div>
+<div style="flex: 2; border: none;">
 
-## Background
+
+基于 nextflow 搭建的一个端到端、用户使用友好(Friendly)、可重复(Repeatable)、兼顾通用性(Universal)和灵活性(Flexible)的单细胞分析流程软件。
+
+涵盖数据质控、自动化注释、数据整合去批次、差异分析、富集分析、数据格式转换和伪时序分析，支持一行代码跑整个流程，也支持按子流程需求运行，极大利用了 nextflow 高效的资源监管优势。
+
+</div>
+</div>
+
+---
+
+## Install
+```shell
+git clone https://github.com/ydgenomics/scLine.git
+cd scLine
+nextflow run main.nf --help
+```
+
+## Vignettes
+- **Instal & Setup**: 在云平台基于conda在同一个image配置多个conda环境
+- **Data**: 
+  - 下载[人PBMC数据](https://cellgeni.github.io/notebooks/html/new-10kPBMC-SoupX.html)基于随机取样构建测试数据 [matrix_random_sample.R]()
+  - 三种类型测试数据: 单一重复取样(example1), 处理对照取样(example2), 时序重复取样(example3) [./input]()
+    ```mermaid
+    flowchart TB
+    1[example1] -->|biosample:group1| 1.1[sample1]
+    1[example1] -->|biosample:group1| 1.2[sample2]
+    2[example2] -->|biosample:ctrl| 2.1.1[sample1]
+    2[example2] -->|biosample:ctrl| 2.1.2[sample2]
+    2[example2] -->|biosample:stim| 2.2.1[sample3]
+    2[example2] -->|biosample:stim| 2.2.2[sample4]
+    ```
+    ```mermaid
+    flowchart TB
+    3[example3] -->|biosample:time1| 3.1.1[sample1]
+    3[example3] -->|biosample:time1| 3.1.2[sample2]
+    3[example3] -->|biosample:time2| 3.2.1[sample3]
+    3[example3] -->|biosample:time2| 3.2.2[sample4]
+    3[example3] -->|biosample:time3| 3.3.1[sample5]
+    3[example3] -->|biosample:time3| 3.3.2[sample6]
+    ```
+- **Run**
+- **A step-by-step guide**
+  <details> <summary><strong> 棉花数据复现 </strong></summary>
+
+  # [Single-cell transcriptome atlas identified novel regulators for pigment gland morphogenesis in cotton](https://doi.org/10.1111/pbi.14035)
+  陆地棉子叶（1周）的单细胞测序 。 Glanded代表CCRI12栽培种陆地棉，Glandless代表CCRI12突变体（无腺体）。 10X Genomics
+    - SRR31330970 Glanded
+    - SRR31330969 Glandless
+
+  ```shell
+  cd /data/work/Reference/Gossypium
+  prefetch SRR31330970 --max-size 120G
+  id="SRR31330970"
+  fastq-dump -O fastq/ --split-3 --gzip ./${id}/${id}.sra
+  fasterq-dump -O fastq/${id} --split-files -e 40 ./${id}/${id}.sra  --include-technical  -x
+  prefetch SRR31330969 --max-size 120G
+
+  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.gtf.gz
+  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_protein.faa.gz
+  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.fna.gz
+  ```
+
+  复现过程找到原文的参考基因组很困难，通过NCBI的refgenome来找，你们的基因名都是LOC命名方式，这些只是标识符，从标识符到相比更具意义的基因名有不少困难
+
+  pigment gland 色素腺体
+  cottonseed 棉籽
+  gossypol 棉子酚
+  derivative 派生物/衍生物
+  gland cotton ‘CCRI12’ and glandless cotton ‘CCRI12gl’
+  cotyledon 子叶
+  protoplast 原生质体
+
+  A total of 9186 individual cells, including 4790 cells from ‘CCRI12’ and 4396 cells from ‘CCRI12gl’, were obtained after cell filtering process (Figure S1, Table S1) and were divided into 12 clusters based on highly variable genes (Figure 1b, Figure S2).
+
+    
+  </details>
+
+- **Mode with 'all'**
 
 
 ## Pipeline
@@ -92,69 +173,6 @@
   ```
 - **报错**: 每个子任务运行前检查必须输入文件是否完整，若问题输出报错和缺失信息
 - **帮助**: 通过`nextflow run main.nf --help`输出帮助信息(参数解释，输出示例)
-
-
-## Vignettes
-- **Instal & Setup**: 在云平台基于conda在同一个image配置多个conda环境
-- **Data**: 
-  - 下载[人PBMC数据](https://cellgeni.github.io/notebooks/html/new-10kPBMC-SoupX.html)基于随机取样构建测试数据 [matrix_random_sample.R]()
-  - 三种类型测试数据: 单一重复取样(example1), 处理对照取样(example2), 时序重复取样(example3) [./input]()
-    ```mermaid
-    flowchart TB
-    1[example1] -->|biosample:group1| 1.1[sample1]
-    1[example1] -->|biosample:group1| 1.2[sample2]
-    2[example2] -->|biosample:ctrl| 2.1.1[sample1]
-    2[example2] -->|biosample:ctrl| 2.1.2[sample2]
-    2[example2] -->|biosample:stim| 2.2.1[sample3]
-    2[example2] -->|biosample:stim| 2.2.2[sample4]
-    ```
-    ```mermaid
-    flowchart TB
-    3[example3] -->|biosample:time1| 3.1.1[sample1]
-    3[example3] -->|biosample:time1| 3.1.2[sample2]
-    3[example3] -->|biosample:time2| 3.2.1[sample3]
-    3[example3] -->|biosample:time2| 3.2.2[sample4]
-    3[example3] -->|biosample:time3| 3.3.1[sample5]
-    3[example3] -->|biosample:time3| 3.3.2[sample6]
-    ```
-- **Run**
-- **A step-by-step guide**
-  <details> <summary><strong> 棉花数据复现 </strong></summary>
-
-  # [Single-cell transcriptome atlas identified novel regulators for pigment gland morphogenesis in cotton](https://doi.org/10.1111/pbi.14035)
-  陆地棉子叶（1周）的单细胞测序 。 Glanded代表CCRI12栽培种陆地棉，Glandless代表CCRI12突变体（无腺体）。 10X Genomics
-    - SRR31330970 Glanded
-    - SRR31330969 Glandless
-
-  ```shell
-  cd /data/work/Reference/Gossypium
-  prefetch SRR31330970 --max-size 120G
-  id="SRR31330970"
-  fastq-dump -O fastq/ --split-3 --gzip ./${id}/${id}.sra
-  fasterq-dump -O fastq/${id} --split-files -e 40 ./${id}/${id}.sra  --include-technical  -x
-  prefetch SRR31330969 --max-size 120G
-
-  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.gtf.gz
-  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_protein.faa.gz
-  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.fna.gz
-  ```
-
-  复现过程找到原文的参考基因组很困难，通过NCBI的refgenome来找，你们的基因名都是LOC命名方式，这些只是标识符，从标识符到相比更具意义的基因名有不少困难
-
-  pigment gland 色素腺体
-  cottonseed 棉籽
-  gossypol 棉子酚
-  derivative 派生物/衍生物
-  gland cotton ‘CCRI12’ and glandless cotton ‘CCRI12gl’
-  cotyledon 子叶
-  protoplast 原生质体
-
-  A total of 9186 individual cells, including 4790 cells from ‘CCRI12’ and 4396 cells from ‘CCRI12gl’, were obtained after cell filtering process (Figure S1, Table S1) and were divided into 12 clusters based on highly variable genes (Figure 1b, Figure S2).
-
-    
-  </details>
-
-- **Mode with 'all'**
 
 ## Reference
 |Software|Year|Article|
