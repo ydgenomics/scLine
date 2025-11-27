@@ -1,5 +1,16 @@
 ## Using conda builds available running environment
 
+```shell
+# convert
+conda env export -n convert > convert_environment.yaml
+
+# scib  
+conda env export -n scib > scib_environment.yaml
+
+# scline
+conda env export -n scline > scline_environment.yaml
+```
+
 - papermill 终端离线运行notebook
 - optparse R脚本传参
 - irkernel 运行notebook的R核心
@@ -59,6 +70,15 @@ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh # ins
 bash Miniconda3-latest-Linux-x86_64.sh # will installed on ~/miniconda3
 source /software/miniconda/bin/activate
 # conda config --set auto_activate_base false
+```
+
+</details>
+
+<details> <summary> 安装java再基于java安装nextflow </summary>
+
+```shell
+# https://www.nextflow.io/docs/latest/install.html
+
 ```
 
 </details>
