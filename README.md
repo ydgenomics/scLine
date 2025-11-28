@@ -77,7 +77,7 @@ Launching `main.nf` [suspicious_mestorf] DSL2 - revision: 63ac5fd7de
 ```
 
 ```mermaid
-flowchart TB
+flowchart LR
 0(Matrix) --> 1[[QC]]
 1 --- 1.1{{runsoupx?}}
 1.1 ---|yes| 1.2([SoupX]) --- 1.3([scrublet])
@@ -100,77 +100,17 @@ flowchart TB
 
 ### 子流程运行
 
-<details> <summary><strong> 棉花数据复现 </strong></summary>
-
-# [Single-cell transcriptome atlas identified novel regulators for pigment gland morphogenesis in cotton](https://doi.org/10.1111/pbi.14035)
-陆地棉子叶（1周）的单细胞测序 。 Glanded代表CCRI12栽培种陆地棉，Glandless代表CCRI12突变体（无腺体）。 10X Genomics
-  - SRR31330970 Glanded
-  - SRR31330969 Glandless
-
-```shell
-cd /data/work/Reference/Gossypium
-prefetch SRR31330970 --max-size 120G
-id="SRR31330970"
-fastq-dump -O fastq/ --split-3 --gzip ./${id}/${id}.sra
-fasterq-dump -O fastq/${id} --split-files -e 40 ./${id}/${id}.sra  --include-technical  -x
-prefetch SRR31330969 --max-size 120G
-
-# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.gtf.gz
-# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_protein.faa.gz
-# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.fna.gz
-```
-
-复现过程找到原文的参考基因组很困难，通过NCBI的refgenome来找，你们的基因名都是LOC命名方式，这些只是标识符，从标识符到相比更具意义的基因名有不少困难
-
-pigment gland 色素腺体
-cottonseed 棉籽
-gossypol 棉子酚
-derivative 派生物/衍生物
-gland cotton ‘CCRI12’ and glandless cotton ‘CCRI12gl’
-cotyledon 子叶
-protoplast 原生质体
-
-A total of 9186 individual cells, including 4790 cells from ‘CCRI12’ and 4396 cells from ‘CCRI12gl’, were obtained after cell filtering process (Figure S1, Table S1) and were divided into 12 clusters based on highly variable genes (Figure 1b, Figure S2).
-
-  
-</details>
+|No.|subPipeline|mode|Details|Software|
+|-|-|-|-|-|
+|01|QC|qc|质控|[SoupX](https://github.com/constantAmateur/SoupX); [scrublet](https://github.com/swolock/scrublet)|
+|02|ANNO|anno|样本细胞注释|[SingleR](https://github.com/dviraran/SingleR); [ScType](https://github.com/IanevskiAleksandr/sc-type)|
+|03|INTEGRATE|integrate|分组数据整合去批次|[harmony](https://github.com/immunogenomics/harmony); [scvi-tools](https://github.com/scverse/scvi-tools); [LIGER](https://github.com/welch-lab/liger); [CCA](https://crazyhottommy.github.io/single-cell-RNAseq-PCA-CCA-cell-annotation/how-seurat-cca-label-transfer.html); [scib-metrics](https://github.com/YosefLab/scib-metrics)|
+|04|METANEIGHBOR|metaneighbor|群相似性|[MetaNeighbor](https://github.com/maggiecrow/MetaNeighbor)|
+|05|DEA|dea|差异分析|[FindMarkers](https://satijalab.org/seurat/reference/findmarkers)|
+|06|ENRICH|enrich|富集分析|[Galaxy(website)](https://usegalaxy.eu/):eggnog-mapper; [clusterProfiler](https://github.com/YuLab-SMU/clusterProfiler)|
+|07|PSEUDOTIME|pseudotime|伪时序|[CytoTrace](https://cytotrace.stanford.edu/); [cellrank2](https://cellrank.readthedocs.io/en/latest/about/version2.html)|
 
 ### 全流程运行
-
-<details> <summary><strong> 棉花数据复现 </strong></summary>
-
-# [Single-cell transcriptome atlas identified novel regulators for pigment gland morphogenesis in cotton](https://doi.org/10.1111/pbi.14035)
-陆地棉子叶（1周）的单细胞测序 。 Glanded代表CCRI12栽培种陆地棉，Glandless代表CCRI12突变体（无腺体）。 10X Genomics
-  - SRR31330970 Glanded
-  - SRR31330969 Glandless
-
-```shell
-cd /data/work/Reference/Gossypium
-prefetch SRR31330970 --max-size 120G
-id="SRR31330970"
-fastq-dump -O fastq/ --split-3 --gzip ./${id}/${id}.sra
-fasterq-dump -O fastq/${id} --split-files -e 40 ./${id}/${id}.sra  --include-technical  -x
-prefetch SRR31330969 --max-size 120G
-
-# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.gtf.gz
-# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_protein.faa.gz
-# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.fna.gz
-```
-
-复现过程找到原文的参考基因组很困难，通过NCBI的refgenome来找，你们的基因名都是LOC命名方式，这些只是标识符，从标识符到相比更具意义的基因名有不少困难
-
-pigment gland 色素腺体
-cottonseed 棉籽
-gossypol 棉子酚
-derivative 派生物/衍生物
-gland cotton ‘CCRI12’ and glandless cotton ‘CCRI12gl’
-cotyledon 子叶
-protoplast 原生质体
-
-A total of 9186 individual cells, including 4790 cells from ‘CCRI12’ and 4396 cells from ‘CCRI12gl’, were obtained after cell filtering process (Figure S1, Table S1) and were divided into 12 clusters based on highly variable genes (Figure 1b, Figure S2).
-
-  
-</details>
 
 
 ## Pipeline
@@ -278,9 +218,6 @@ A total of 9186 individual cells, including 4790 cells from ‘CCRI12’ and 439
 - **输出**
   - 每个子分析单独生成一个文件夹，包含单细胞数据和可视化文件
   - 输出运行记录`*.log`，任务运行时间和资源使用见`execution-report.html`和`execution-timeline.html`
-  ```shell
-  
-  ```
 - **报错**: 每个子任务运行前检查必须输入文件是否完整，若问题输出报错和缺失信息
 - **帮助**: 通过`nextflow run main.nf --help`输出帮助信息(参数解释，输出示例)
 
