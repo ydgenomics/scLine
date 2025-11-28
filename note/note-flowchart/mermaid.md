@@ -1,48 +1,3 @@
-[Markdown+plantuml:最强流程图绘制](https://mp.weixin.qq.com/s/YbXcBRphGjPEaDgEvfXblA)
-```plantuml
-:10x matrix;
-if (01_qc) then (doSoupX)
-  :SoupX;
-  note left
-    rawPaths
-    filterPaths
-    sampleValues
-  end note
-  :scrublet;
-else (not doSoupX)
-  :scrublet;
-  note right
-    test
-  end note
-endif
-
-
-if (02_anno) then (auto)
-  if (haveRef?) then (yes)
-    :singleR;
-  (no) elseif (haveMarker?) then (yes)
-    :scType;
-  else (no)
-    stop
-  endif
-  :summary;
-  note left
-    weight.txt
-  end note
-else (manual)
-  if (03_enrich) then (haveGo)
-    :clusterprofiler;
-  else (no)
-    stop
-  endif
-
-endif
-
-:Run Integration;
-
-stop
-```
-
 | 主形状       | 可用括号写法     | 说明 / 别名             |
 | --------- | ---------- | ------------------- |
 | 矩形        | `[文本]`     | 默认矩形                |
@@ -62,7 +17,10 @@ stop
 | 文档        | `[(文本)]`   | document（同圆柱，但语义不同） |
 | 标签矩形      | `([文本])`   | tagged-rectangle    |
 
-
+```mermaid
+flowchart LR
+1[矩形] --- 2(圆角矩形) --- 3([体育场]) --- 4[[子程序]] --- 5[(圆柱)] --- 6((圆形)) --- 7>非对称矩形] --- 8{菱形} --- 9{{菱形}} --- 10[/平行四边形（左斜/] --- 11[\平行四边形（左斜）\] --- 12[/梯形（上短下长）\] --- 13[\梯形（上长下短）/] --- 14(((双圆))) --- 15[(文档)] --- 16([标签矩形])
+```
 
 | 场景    | 写法                         | 效果     |
 | ----- | -------------------------- | ------ |
