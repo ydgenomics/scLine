@@ -110,6 +110,371 @@ flowchart LR
 |06|ENRICH|enrich|富集分析|[Galaxy(website)](https://usegalaxy.eu/):eggnog-mapper; [clusterProfiler](https://github.com/YuLab-SMU/clusterProfiler)|
 |07|PSEUDOTIME|pseudotime|伪时序|[CytoTrace](https://cytotrace.stanford.edu/); [cellrank2](https://cellrank.readthedocs.io/en/latest/about/version2.html)|
 
+<details> <summary> <strong> qc </strong> </summary>
+
+```shell
+$ nextflow run main.nf --mode qc --help
+
+ N E X T F L O W   ~  version 25.04.6
+
+Launching `main.nf` [adoring_sinoussi] DSL2 - revision: 63ac5fd7de
+
+
+    ================================================================================
+    QC Mode - Quality Control and Preprocessing
+    ================================================================================
+    
+    Usage:
+    nextflow run main.nf --mode qc [OPTIONS]
+    
+    Required Parameters:
+    --rawPaths str                Pipe-separated list of raw data paths
+    --filterPaths str             Pipe-separated list of filtered data paths
+    --biosampleValues str         Pipe-separated biosample group names
+    --sampleValues str            Pipe-separated sample names
+    
+    Optional Parameters:
+    --tfidfMin int/float          Minimum value of tfidf to accept for a marker gene (SoupX)
+                                  Default: 1 (If SoupX is not working properly, try decreasing it.)
+    --rlst str                    Pipe-separated list of rlst values for SoupX
+                                  Default: "0.2|0.5|0.8|1.0"
+    --runsoupx str                Run SoupX contamination removal? 'yes' or 'no'
+                                  Default: 'no'
+    --outdir str                  Output directory path
+                                  Default: './results'
+    --qc_cpu str                  CPU resource [SOUPX|SCRUBLET]
+                                  Default: '2|1'                      
+    --qc_mem str                  Memory resource (GB) [SOUPX|SCRUBLET]
+                                  Default: '4|2'
+                                  
+    Example:
+    nextflow run main.nf --mode qc \
+        --rawPaths '/data/work/scline/input/sample1/sample1_raw|/data/work/scline/input/sample2/sample2_raw' \
+        --filterPaths '/data/work/scline/input/sample1/sample1_filter|/data/work/scline/input/sample2/sample2_filter' \
+        --biosampleValues 'group1|group2' \
+        --sampleValues 'sample1|sample2' \
+        --runsoupx 'yes' \
+        --outdir './results/qc'
+```
+
+</details>
+
+
+<details> <summary> <strong> convert </strong> </summary>
+
+```shell
+$ nextflow run main.nf --mode convert --help
+
+ N E X T F L O W   ~  version 25.04.6
+
+Launching `main.nf` [crazy_poitras] DSL2 - revision: 63ac5fd7de
+
+
+    ================================================================================
+    Convert Mode - Data Format Conversion
+    ================================================================================
+    
+    Usage:
+    nextflow run main.nf --mode convert [OPTIONS]
+    
+    Required Parameters:
+    --inputFile str               Input file path for conversion
+    --assay str                   Assay type will be converted
+    --python_env str              Python environment to use
+    
+    Optional Parameters:
+    --outdir str                  Output directory path
+                                  Default: './results'
+    --convert_cpu int             CPU resource
+                                  Default: 1                    
+    --convert_mem int             Memory resource (GB)
+                                  Default: 2
+                                  
+    Example:
+    nextflow run main.nf --mode convert \
+        --inputFile '/data/work/scline/results/qc/qc/group1/group1.h5ad' \
+        --assay 'RNA' \
+        --python_env '/opt/software/miniconda3/envs/scline/bin/python' \
+        --outdir './results/convert'
+```
+
+</details>
+
+
+<details> <summary> <strong> anno </strong> </summary>
+
+```shell
+$ nextflow run main.nf --mode anno --help
+
+ N E X T F L O W   ~  version 25.04.6
+
+Launching `main.nf` [stupefied_visvesvaraya] DSL2 - revision: 63ac5fd7de
+
+
+    ================================================================================
+    Annotation Mode - Cell Type Annotation
+    ================================================================================
+    
+    Usage:
+    nextflow run main.nf --mode anno [OPTIONS]
+    
+    Required Parameters:
+    --input_query_rds str         Input query .rds file (unannotated)
+    --rdsORcsv str                Annotation reference file for scType(.csv) or singleR(.rds)
+    --cluster_key str             Cluster key in the data for annotation
+    --umap_name str               UMAP name for plotting
+                                  Default: 'Xumap_' (must exist in .obsm)
+    --ref_cluster_key str         Reference cluster key in rdsORcsv(.rds)
+                                  Default: 'celltype' (when run singleR is required!)
+    
+    Optional Parameters:
+    --outdir str                  Output directory path
+                                  Default: './results'
+    --anno_cpu int                CPU resource
+                                  Default: 1                    
+    --anno_mem int                Memory resource (GB)
+                                  Default: 2
+    
+    Example:
+    nextflow run main.nf --mode anno \
+        --input_query_rds '/data/work/scline/results/convert/group1.hr.rds' \
+        --rdsORcsv '/data/work/scline/input/markergene.csv' \
+        --cluster_key 'leiden_res_0.50' \
+        --umap_name 'Xumap_' \
+        --outdir './results/anno'
+```
+
+</details>
+
+<details> <summary> <strong> integrate </strong> </summary>
+
+```shell
+$ nextflow run main.nf --mode integrate --help
+
+ N E X T F L O W   ~  version 25.04.6
+
+Launching `main.nf` [happy_leibniz] DSL2 - revision: 63ac5fd7de
+
+
+    ================================================================================
+    Integration Mode - Data Integration and Batch Correction
+    ================================================================================
+    
+    Usage:
+    nextflow run main.nf --mode integrate [OPTIONS]
+    
+    Required Parameters:
+    --inputH5ad str               Pipe-separated list of input H5AD files
+    --annoCsv str                 Annotation CSV file (two columns: 'barcode' & 'anno')
+                                  (if not exist, could use the same input of '--inputH5ad')
+    --biosampleValues str         Pipe-separated biosample names
+    --prefix str                  Output prefix
+    --other1_key str              Additional metadata key 1 (must exist in .obs.column)
+                                  Default: 'biosample'
+    --other2_key str              Additional metadata key 2 (must exist in .obs.column and best with annotation info)
+                                  Default: 'leiden_res_0.50'
+    --python_env str              Python environment to use                              
+    
+    Optional Parameters:
+    --resolutionSet float         Resolution parameter for clustering after integration
+                                  Default: 0.5
+    --runsct str                  Run SCTransform(SCT.CCA and SCT.harmony)? 'yes' or 'no'
+                                  Default: 'no' (Running it will spend many resource)
+    --outdir str                  Output directory path
+                                  Default: './results'
+    --inte_cpu str                CPU resource [CONCAT|SCVI|HARMONY|UNINTEGRATION|CONVERT_1|RLIGER|CONVERT_1_int|SCT_CCA|SCT_HARMONY|CONVERT_2_int|DEALPLUS|SCIB]
+                                  Default: '1|8|2|2|1|2|1|4|4|1|1|8'                    
+    --inte_mem str                Memory resource (GB) [CONCAT|SCVI|HARMONY|UNINTEGRATION|CONVERT_1|RLIGER|CONVERT_1_int|SCT_CCA|SCT_HARMONY|CONVERT_2_int|DEALPLUS|SCIB]
+                                  Default: '2|4|4|4|4|4|4|8|8|4|4|8'
+                                  
+    Example:
+    nextflow run main.nf --mode integrate \
+        --inputH5ad '/data/work/scline/results/qc/qc/group1/group1.h5ad|/data/work/scline/results/qc/qc/group2/group2.h5ad' \
+        --annoCsv '/data/work/scline/results/qc/qc/group1/group1.h5ad|/data/work/scline/results/qc/qc/group2/group2.h5ad' \
+        --biosampleValues 'group1|group2' \
+        --prefix 'cotton' \
+        --other1_key 'biosample' \
+        --other2_key 'leiden_res_0.50' \
+        --python_env '/opt/software/miniconda3/envs/scline/bin/python' \
+        --runsct 'yes' \
+        --outdir './results/integrate'
+```
+
+</details>
+
+<details> <summary> <strong> metaneighbor </strong> </summary>
+
+```shell
+$ nextflow run main.nf --mode metaneighbor --help
+
+ N E X T F L O W   ~  version 25.04.6
+
+Launching `main.nf` [romantic_banach] DSL2 - revision: 63ac5fd7de
+
+
+    ================================================================================
+    MetaNeighbor Mode - Cell Type Similarity Analysis
+    ================================================================================
+    
+    Usage:
+    nextflow run main.nf --mode metaneighbor [OPTIONS]
+    
+    Required Parameters:
+    --inputFile str               Input integrated RDS file
+    --prefix str                  Output prefix
+    --batch_key str               Batch key in metadata
+    --cluster_key str             Cluster key in metadata
+    --seq str                     Pipe-separated sequence identifiers (values of batch_key combined with '|')
+    
+    Optional Parameters:
+    --slimit float                Similarity limit threshold
+                                  Default: 0.8
+    --outdir str                  Output directory path
+                                  Default: './results'
+    --meta_cpu int                CPU resource
+                                  Default: 1                    
+    --meta_mem int                Memory resource (GB)
+                                  Default: 2
+                                  
+    Example:
+    nextflow run main.nf --mode metaneighbor \
+        --inputFile '/data/work/scline/results/integrate/cotton_rliger.INMF_integrated_dealplus.rds' \
+        --prefix 'cotton' \
+        --batch_key 'biosample' \
+        --cluster_key 'leiden_res_0.50' \
+        --seq 'group1|group2' \
+        --outdir './results/metaneighbor'
+```
+
+</details>
+
+<details> <summary> <strong> dea </strong> </summary>
+
+```shell
+$ nextflow run main.nf --mode dea --help
+
+ N E X T F L O W   ~  version 25.04.6
+
+Launching `main.nf` [evil_salas] DSL2 - revision: 63ac5fd7de
+
+
+    ================================================================================
+    DEA Mode - Differential Expression Analysis
+    ================================================================================
+    
+    Usage:
+    nextflow run main.nf --mode dea [OPTIONS]
+    
+    Required Parameters:
+    --inputFile str               Input RDS file
+    --cluster_key str             Cluster key in metadata
+    --ident_1 str                 Identity 1 for comparison
+    --ident_2 str                 Identity 2 for comparison
+    
+    Optional Parameters:
+    --outdir str                  Output directory path
+                                  Default: './results'
+    --dea_cpu int                 CPU resource
+                                  Default: 1                    
+    --dea_mem int                 Memory resource (GB)
+                                  Default: 2
+                                  
+    Example:
+    nextflow run main.nf --mode dea \
+        --inputFile '/data/work/scline/results/integrate/cotton_rliger.INMF_integrated_dealplus.rds' \
+        --cluster_key 'leiden_res_0.50' --ident_1 '0' --ident_2 '1' \
+        --outdir './results/dea'
+```
+
+</details>
+
+<details> <summary> <strong> enrich </strong> </summary>
+
+```shell
+$ nextflow run main.nf --mode enrich --help
+
+ N E X T F L O W   ~  version 25.04.6
+
+Launching `main.nf` [peaceful_rosalind] DSL2 - revision: 63ac5fd7de
+
+
+    ================================================================================
+    ENRICH Mode - Functional Enrichment Analysis
+    ================================================================================
+    
+    Usage:
+    nextflow run main.nf --mode enrich [OPTIONS]
+    
+    Required Parameters:
+    --emapper_xlsx str            EggNOG mapper annotations file
+    --gene_csv str                Gene markers CSV file included these columns (cluster/gene/) 
+    
+    Optional Parameters:
+    --genus str                   Genus name
+                                  Default: "Genus"
+    --species str                 Species name
+                                  Default: "species"
+    --minp float                  Minimum p-value threshold
+                                  Default: 0.05
+    --outdir str                  Output directory path
+                                  Default: './results'
+    --enrich_cpu int              CPU resource
+                                  Default: 1                    
+    --enrich_mem int              Memory resource (GB)
+                                  Default: 2
+                                  
+    Example:
+    nextflow run main.nf --mode enrich \
+        --emapper_xlsx '/data/work/scline/bin/06_enrich/out.emapper.annotations.xlsx' \
+        --gene_csv '/data/work/scline/bin/06_enrich/leiden_res_0.50.markers.csv' \
+        --outdir './results/enrich'
+```
+
+</details>
+
+<details> <summary> <strong> pseudotime </strong> </summary>
+
+```shell
+$ nextflow run main.nf --mode pseudotime --help
+
+ N E X T F L O W   ~  version 25.04.6
+
+Launching `main.nf` [agitated_lattes] DSL2 - revision: 63ac5fd7de
+
+
+    ================================================================================
+    Pseudotime Mode - Trajectory Analysis
+    ================================================================================
+    
+    Usage:
+    nextflow run main.nf --mode pseudotime [OPTIONS]
+    
+    Required Parameters:
+    --inputFile str               Input H5AD file
+    --batch_key str               Batch key in metadata
+    --cluster_key str             Cluster key in metadata
+    --cluster_value str           Pipe-separated cluster values for pseudotime (values of cluster_key combined with '|')
+    
+    Optional Parameters:
+    --outdir str                  Output directory path
+                                  Default: './results'
+    --time_cpu int                CPU resource
+                                  Default: 1                    
+    --time_mem int                Memory resource (GB)
+                                  Default: 4
+                                  
+    Example:
+    nextflow run main.nf --mode pseudotime \
+        --inputFile '/data/work/scline/results/integrate/cotton_harmony_integrated_dealplus.h5ad' \
+        --batch_key 'biosample' \
+        --cluster_key 'celltype' \
+        --cluster_value '0|1' \
+        --outdir './results/pseudotime'
+```
+
+</details>
+
+
 ### 全流程运行
 
 
