@@ -11,6 +11,13 @@ conda env export -n scib > scib_environment.yaml
 conda env export -n scline > scline_environment.yaml
 ```
 
+```shell
+cd /
+git clone https://github.com/ydgenomics/scLine.git
+conda env create -f /scLine/env/scib_environment.yaml
+
+```
+
 - papermill 终端离线运行notebook
 - optparse R脚本传参
 - irkernel 运行notebook的R核心

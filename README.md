@@ -10,51 +10,167 @@
 
 
 ## Installation
-```shell
-git clone https://github.com/ydgenomics/scLine.git
-cd scLine
-nextflow run main.nf --help
-```
-配置`nextflow.config`
+
+基于[Git](https://git-scm.com/install/linux)和[Conda](https://www.anaconda.com/docs/getting-started/miniconda/install)配置环境
+
+1. **复制scLine代码仓库**
+   ```shell
+   git clone https://github.com/ydgenomics/scLine.git
+   cd scLine
+   # 如果已经安装了nextflow，运行下面代码测试
+   # nextflow run main.nf --help
+   ```
+2. **配置Conda环境** [README](./env/README.md)
+   - 方案一: 基于软件下载命令分布运行配置环境 [convert](./env/convert_env.sh) [scib](./env/scib_env.sh) [scline](./env/scline_env.sh)
+   - 方案二: 基于`.yaml`文件使用`conda env create -f *.yaml`构建对应环境，但有些包并不是基于conda安装，仍然存在挑战 [*.yaml](./env)
+3. **配置`nextflow.config`的Conda环境**
+   ！！！修改其85-99行的环境代码，替代为自己机器真实Conda环境的绝对地址和可用环境名
+   ```shell
+   // --- scline: ---
+   def sclineEnv = '''
+       source /opt/software/miniconda3/bin/activate
+       conda activate scline
+   '''
+   // --- convert: ---
+   def convertEnv = '''
+       source /opt/software/miniconda3/bin/activate
+       conda activate convert
+   '''
+   // --- scib: ---
+   def scibEnv = '''
+       source /opt/software/miniconda3/bin/activate
+       conda activate scib
+   '''
+   ```
 
 ## Vignettes
-- **A step-by-step guide**
-  <details> <summary><strong> 棉花数据复现 </strong></summary>
+scLine通过`--mode`参数来区分运行子流程和全流程，子流程文件输入各有要求，详见不同`mode`的帮助信息
+```shell
+$ nextflow run main.nf --help
 
-  # [Single-cell transcriptome atlas identified novel regulators for pigment gland morphogenesis in cotton](https://doi.org/10.1111/pbi.14035)
-  陆地棉子叶（1周）的单细胞测序 。 Glanded代表CCRI12栽培种陆地棉，Glandless代表CCRI12突变体（无腺体）。 10X Genomics
-    - SRR31330970 Glanded
-    - SRR31330969 Glandless
+ N E X T F L O W   ~  version 25.04.6
 
-  ```shell
-  cd /data/work/Reference/Gossypium
-  prefetch SRR31330970 --max-size 120G
-  id="SRR31330970"
-  fastq-dump -O fastq/ --split-3 --gzip ./${id}/${id}.sra
-  fasterq-dump -O fastq/${id} --split-files -e 40 ./${id}/${id}.sra  --include-technical  -x
-  prefetch SRR31330969 --max-size 120G
+Launching `main.nf` [suspicious_mestorf] DSL2 - revision: 63ac5fd7de
 
-  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.gtf.gz
-  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_protein.faa.gz
-  # wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.fna.gz
-  ```
 
-  复现过程找到原文的参考基因组很困难，通过NCBI的refgenome来找，你们的基因名都是LOC命名方式，这些只是标识符，从标识符到相比更具意义的基因名有不少困难
-
-  pigment gland 色素腺体
-  cottonseed 棉籽
-  gossypol 棉子酚
-  derivative 派生物/衍生物
-  gland cotton ‘CCRI12’ and glandless cotton ‘CCRI12gl’
-  cotyledon 子叶
-  protoplast 原生质体
-
-  A total of 9186 individual cells, including 4790 cells from ‘CCRI12’ and 4396 cells from ‘CCRI12gl’, were obtained after cell filtering process (Figure S1, Table S1) and were divided into 12 clusters based on highly variable genes (Figure 1b, Figure S2).
-
+    ================================================================================
+    scline: single-cell analysis pipeline
+    ================================================================================
     
-  </details>
+    Usage:
+    nextflow run main.nf --mode <MODE> [OPTIONS]
+    
+    Available Modes:
+    - qc          : Quality control and preprocessing
+    - convert     : Data format conversion
+    - anno        : Cell type annotation
+    - integrate   : Data integration and batch correction
+    - metaneighbor: MetaNeighbor analysis
+    - dea         : Differential expression analysis
+    - enrich      : Functional enrichment analysis
+    - pseudotime  : Pseudotime trajectory analysis
+    
+    For mode-specific help:
+    nextflow run main.nf --mode <MODE> --help
+    
+    ================================================================================
+```
 
-- **Mode with 'all'**
+```mermaid
+flowchart TB
+0(Matrix) --> 1[[QC]]
+1 --- 1.1{{runsoupx?}}
+1.1 ---|yes| 1.2([SoupX]) --- 1.3([scrublet])
+1.1 ---|no| 1.3
+1 --> 2[[ANNO]]
+1 --> 6[[ENRICH]] --- 6.0{{eggnogmaper_xlsx?}}---|exist| 6.1([makeOrgPackage]) --- 6.2([clusterProfiler])
+6.0 ---|null| 6.3[(Galaxy:eggnog-mapper)] --- 6.1
+2 --- 2.1{{Auto: rdsORcsv}}
+2.1 ---|.rds| 2.2([SingleR])
+2.1 ---|.csv| 2.3([ScType])
+2 --> 3[[INTEGRATE]]
+3 --- 3.1{{runsct?}}
+3 --- 3.0([scVI, harmony, unintegration, rliger]) --- 3.3([scib-metrics])
+3.1 ---|yes| 3.2([SCT.CCA, SCT.harmony]) --- 3.3
+3 --> 4[[METANEIGHBOR]] --- 4.1([MetaNeighbor])
+3 --> 5[[DEA]] --- 5.1([FindMarkers])
+5 --> 6
+3 --> 7[[PSEUDOTIME]] --- 7.1([CytoTrace])
+```
+
+### 子流程运行
+
+<details> <summary><strong> 棉花数据复现 </strong></summary>
+
+# [Single-cell transcriptome atlas identified novel regulators for pigment gland morphogenesis in cotton](https://doi.org/10.1111/pbi.14035)
+陆地棉子叶（1周）的单细胞测序 。 Glanded代表CCRI12栽培种陆地棉，Glandless代表CCRI12突变体（无腺体）。 10X Genomics
+  - SRR31330970 Glanded
+  - SRR31330969 Glandless
+
+```shell
+cd /data/work/Reference/Gossypium
+prefetch SRR31330970 --max-size 120G
+id="SRR31330970"
+fastq-dump -O fastq/ --split-3 --gzip ./${id}/${id}.sra
+fasterq-dump -O fastq/${id} --split-files -e 40 ./${id}/${id}.sra  --include-technical  -x
+prefetch SRR31330969 --max-size 120G
+
+# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.gtf.gz
+# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_protein.faa.gz
+# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.fna.gz
+```
+
+复现过程找到原文的参考基因组很困难，通过NCBI的refgenome来找，你们的基因名都是LOC命名方式，这些只是标识符，从标识符到相比更具意义的基因名有不少困难
+
+pigment gland 色素腺体
+cottonseed 棉籽
+gossypol 棉子酚
+derivative 派生物/衍生物
+gland cotton ‘CCRI12’ and glandless cotton ‘CCRI12gl’
+cotyledon 子叶
+protoplast 原生质体
+
+A total of 9186 individual cells, including 4790 cells from ‘CCRI12’ and 4396 cells from ‘CCRI12gl’, were obtained after cell filtering process (Figure S1, Table S1) and were divided into 12 clusters based on highly variable genes (Figure 1b, Figure S2).
+
+  
+</details>
+
+### 全流程运行
+
+<details> <summary><strong> 棉花数据复现 </strong></summary>
+
+# [Single-cell transcriptome atlas identified novel regulators for pigment gland morphogenesis in cotton](https://doi.org/10.1111/pbi.14035)
+陆地棉子叶（1周）的单细胞测序 。 Glanded代表CCRI12栽培种陆地棉，Glandless代表CCRI12突变体（无腺体）。 10X Genomics
+  - SRR31330970 Glanded
+  - SRR31330969 Glandless
+
+```shell
+cd /data/work/Reference/Gossypium
+prefetch SRR31330970 --max-size 120G
+id="SRR31330970"
+fastq-dump -O fastq/ --split-3 --gzip ./${id}/${id}.sra
+fasterq-dump -O fastq/${id} --split-files -e 40 ./${id}/${id}.sra  --include-technical  -x
+prefetch SRR31330969 --max-size 120G
+
+# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.gtf.gz
+# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_protein.faa.gz
+# wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/990/345/GCF_007990345.1_Gossypium_hirsutum_v2.1/GCF_007990345.1_Gossypium_hirsutum_v2.1_genomic.fna.gz
+```
+
+复现过程找到原文的参考基因组很困难，通过NCBI的refgenome来找，你们的基因名都是LOC命名方式，这些只是标识符，从标识符到相比更具意义的基因名有不少困难
+
+pigment gland 色素腺体
+cottonseed 棉籽
+gossypol 棉子酚
+derivative 派生物/衍生物
+gland cotton ‘CCRI12’ and glandless cotton ‘CCRI12gl’
+cotyledon 子叶
+protoplast 原生质体
+
+A total of 9186 individual cells, including 4790 cells from ‘CCRI12’ and 4396 cells from ‘CCRI12gl’, were obtained after cell filtering process (Figure S1, Table S1) and were divided into 12 clusters based on highly variable genes (Figure 1b, Figure S2).
+
+  
+</details>
 
 
 ## Pipeline
@@ -96,15 +212,15 @@ nextflow run main.nf --help
   - 10_cellphone: 细胞通讯(plantphone)
   - 11_grn: 转录调控网络(pySCENIC/IReNA) -->
 
-  |No.|subPipeline|Software|Details|
-  |-|-|-|-|
-  |01|QC|质控|[SoupX](https://github.com/constantAmateur/SoupX); [scrublet](https://github.com/swolock/scrublet)|
-  |02|ANNO|样本细胞注释|[SingleR](https://github.com/dviraran/SingleR); [ScType](https://github.com/IanevskiAleksandr/sc-type)|
-  |03|INTEGRATE|分组数据整合去批次|[harmony](https://github.com/immunogenomics/harmony); [scvi-tools](https://github.com/scverse/scvi-tools); [LIGER](https://github.com/welch-lab/liger); [CCA](https://crazyhottommy.github.io/single-cell-RNAseq-PCA-CCA-cell-annotation/how-seurat-cca-label-transfer.html); [scib-metrics](https://github.com/YosefLab/scib-metrics)|
-  |04|METANEIGHBOR|群相似性|[MetaNeighbor](https://github.com/maggiecrow/MetaNeighbor)|
-  |05|DEA|差异分析|[FindMarkers](https://satijalab.org/seurat/reference/findmarkers)|
-  |06|ENRICH|富集分析|[Galaxy(website)](https://usegalaxy.eu/):eggnog-mapper; [clusterProfiler](https://github.com/YuLab-SMU/clusterProfiler)|
-  |07|PSEUDOTIME|伪时序|[CytoTrace](https://cytotrace.stanford.edu/); [cellrank2](https://cellrank.readthedocs.io/en/latest/about/version2.html)|
+  |No.|subPipeline|mode|Details|Software|
+  |-|-|-|-|-|
+  |01|QC|qc|质控|[SoupX](https://github.com/constantAmateur/SoupX); [scrublet](https://github.com/swolock/scrublet)|
+  |02|ANNO|anno|样本细胞注释|[SingleR](https://github.com/dviraran/SingleR); [ScType](https://github.com/IanevskiAleksandr/sc-type)|
+  |03|INTEGRATE|integrate|分组数据整合去批次|[harmony](https://github.com/immunogenomics/harmony); [scvi-tools](https://github.com/scverse/scvi-tools); [LIGER](https://github.com/welch-lab/liger); [CCA](https://crazyhottommy.github.io/single-cell-RNAseq-PCA-CCA-cell-annotation/how-seurat-cca-label-transfer.html); [scib-metrics](https://github.com/YosefLab/scib-metrics)|
+  |04|METANEIGHBOR|metaneighbor|群相似性|[MetaNeighbor](https://github.com/maggiecrow/MetaNeighbor)|
+  |05|DEA|dea|差异分析|[FindMarkers](https://satijalab.org/seurat/reference/findmarkers)|
+  |06|ENRICH|enrich|富集分析|[Galaxy(website)](https://usegalaxy.eu/):eggnog-mapper; [clusterProfiler](https://github.com/YuLab-SMU/clusterProfiler)|
+  |07|PSEUDOTIME|pseudotime|伪时序|[CytoTrace](https://cytotrace.stanford.edu/); [cellrank2](https://cellrank.readthedocs.io/en/latest/about/version2.html)|
 
   ```mermaid
   flowchart TB
