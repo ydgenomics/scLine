@@ -1,0 +1,49 @@
+{% set version = "1.0.0" %}
+
+package:
+  name: scqc
+  version: {{ version }}
+
+# 因为是纯依赖包，源码只用来放脚本，所以随便指一个本地目录
+source:
+  path: files               # 当前目录下的 files 子目录
+
+build:
+  number: 0
+  noarch: generic           # 无平台差异，所有系统通用
+  script: build.sh
+
+# 最关键：把你在帖子里列出的所有包一次性锁死
+requirements:
+  run:
+    - r-base 4.3.*
+    - nextflow >=23
+    - openjdk >=17
+    # R 语言
+    - r-optparse
+    - r-irkernel
+    - r-biocmanager
+    - r-devtools
+    - r-remotes
+    - r-seurat
+    - r-soupx
+    # Python
+    - papermill
+    - ipykernel
+    - scanpy
+    - scrublet
+    - leidenalg
+    # Bioconductor
+    - bioconductor-dropletutils
+
+test:
+  commands:                 # 最简单的冒烟测试
+    - nextflow -v
+    - Rscript -e "packageVersion('Seurat')"
+    - python -c "import scanpy; print(scanpy.__version__)"
+    - scqc --help
+
+about:
+  home: https://github.com/yourname/scqc
+  license: MIT
+  summary: "One-liner conda package for single-cell QC pipelines"
