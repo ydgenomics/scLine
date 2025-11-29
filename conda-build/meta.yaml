@@ -1,0 +1,89 @@
+{% set name = "scline" %}
+{% set version = "1.0.1" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  path: ../
+
+build:
+  number: 0
+  noarch: generic
+
+requirements:
+  host:
+    - r-base 4.3.*
+    - python 3.13.*
+  run:
+    # ---- core ----
+    - r-base 4.3.*
+    - python 3.13.*
+    - papermill
+    - r-optparse
+    - r-irkernel
+    - r-biocmanager
+    - r-devtools
+    - r-remotes
+    - ipykernel
+
+    # 01_qc
+    - r-seurat
+    - bioconductor-dropletutils
+    - scanpy
+    - scrublet
+    - leidenalg
+    - r-soupx
+
+    # 02_anno
+    - bioconductor-singler
+    - r-hgnchelper
+    - r-tidyverse
+    - r-ggraph
+    - r-data.tree
+    - bioconductor-scater
+
+    # 03_integrate
+    - r-seuratdata
+    - bioconductor-liger
+    - r-rcppplanc
+    - r-seuratwrappers
+    - harmonypy
+    - scvi-tools
+    - scikit-misc
+    - bioconductor-glmgampoi
+    - r-harmony
+
+    # 04_metaneighbor
+    - bioconductor-metaneighbor
+    - bioconductor-complexheatmap
+    - r-circlize
+    - plotly
+
+    # 06_enrich
+    - bioconductor-clusterprofiler
+    - bioconductor-keggrest
+    - bioconductor-annotationforge
+
+  # run_constrained:
+  #   # 未来如 scib 解决冲突再放开
+  #   - scib <0a0
+
+# test:
+#   commands:
+#     - scLine --help
+#     - python -c "import scanpy, scvi, leidenalg"
+#     - Rscript -e "packageVersion('Seurat')"
+
+about:
+  home: https://github.com/ydgenomics/scLine
+  license: MIT
+  license_file: LICENSE
+  summary: "scLine: A Nextflow-based single-cell analysis pipeline"
+  doc_url: https://github.com/ydgenomics/scLine#readme
+  dev_url: https://github.com/ydgenomics/scLine
+
+extra:
+  recipe-maintainers:
+    - ydgenomics

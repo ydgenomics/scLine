@@ -23,6 +23,10 @@
 2. **配置Conda环境** [README](./env/README.md)
    - 方案一: 基于软件下载命令分布运行配置环境 [convert](./env/convert_env.sh) [scib](./env/scib_env.sh) [scline](./env/scline_env.sh)
    - 方案二: 基于`.yaml`文件使用`conda env create -f *.yaml`构建对应环境，但有些包并不是基于conda安装，仍然存在挑战 [*.yaml](./env)
+   - 方案三：
+      ```shell
+      conda --version
+      ```
 3. **配置`nextflow.config`的Conda环境**
    ！！！修改其85-99行的环境代码，替代为自己机器真实Conda环境的绝对地址和可用环境名
    ```shell

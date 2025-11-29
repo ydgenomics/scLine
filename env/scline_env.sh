@@ -1,7 +1,7 @@
 source /opt/software/miniconda3/bin/activate
 conda install bioconda::nextflow -y
 # R
-conda create -n scline r-base=4.3 -y
+conda create -n scline r-base=4.3 python=3.13 -y
 conda activate scline
 conda install conda-forge::papermill -y
 conda install conda-forge::r-optparse -y

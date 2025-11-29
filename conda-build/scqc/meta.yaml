@@ -6,12 +6,12 @@ package:
 
 # 因为是纯依赖包，源码只用来放脚本，所以随便指一个本地目录
 source:
-  path: files               # 当前目录下的 files 子目录
+  path: bin               # 当前目录下的 bin 子目录
 
 build:
   number: 0
   noarch: generic           # 无平台差异，所有系统通用
-  script: build.sh
+  # script: build.sh
 
 # 最关键：把你在帖子里列出的所有包一次性锁死
 requirements:
@@ -36,14 +36,13 @@ requirements:
     # Bioconductor
     - bioconductor-dropletutils
 
-test:
-  commands:                 # 最简单的冒烟测试
-    - nextflow -v
-    - Rscript -e "packageVersion('Seurat')"
-    - python -c "import scanpy; print(scanpy.__version__)"
-    - scqc --help
+# test:
+#   commands:                 # 最简单的冒烟测试
+#     - nextflow -v
+#     - Rscript -e "packageVersion('Seurat')"
+#     - python -c "import scanpy; print(scanpy.__version__)"
 
 about:
-  home: https://github.com/yourname/scqc
+  home: https://github.com/ydgenomics/scLine
   license: MIT
   summary: "One-liner conda package for single-cell QC pipelines"

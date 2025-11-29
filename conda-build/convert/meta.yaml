@@ -1,0 +1,26 @@
+# scLine/conda-build/meta.yaml
+{% set name = "convert" %}
+{% set version = "1.0.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+build:
+  number: 0
+  noarch: generic
+
+requirements:
+  host:
+    - python 3.11.*
+  run:
+    - scanpy
+    - r-sceasy
+    - r-reticulate
+    - loompy
+    - optparse
+
+about:
+  home: https://github.com/ydgenomics/scLine
+  license: MIT
+  summary: "scLine: A Nextflow-based single-cell analysis pipeline"
