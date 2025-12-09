@@ -160,6 +160,9 @@ conda install conda-forge::r-ggraph -y
 conda install conda-forge::r-data.tree -y
 conda install bioconda::bioconductor-scater -y
 
+# 02_cluster
+Rscripet -e 'remotes::install_github("corceslab/CHOIR", ref="main", repos = BiocManager::repositories(), upgrade = "never")' # CHOIR
+
 # 03_integrate
 Rscript -e 'install.packages("bbknnR")'
 conda install pwwang::r-seuratdata -y
@@ -184,6 +187,7 @@ conda install conda-forge::plotly -y
 
 # 05_dea
 Rscript -e "install.packages('presto')"
+pip install memento-de # memento
 
 # 06_enrich
 conda install bioconda::bioconductor-clusterprofiler -y
