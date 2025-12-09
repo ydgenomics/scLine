@@ -161,7 +161,7 @@ conda install conda-forge::r-data.tree -y
 conda install bioconda::bioconductor-scater -y
 
 # 02_cluster
-Rscripet -e 'remotes::install_github("corceslab/CHOIR", ref="main", repos = BiocManager::repositories(), upgrade = "never")' # CHOIR
+Rscript -e 'remotes::install_github("corceslab/CHOIR", ref="main", repos = BiocManager::repositories(), upgrade = "never")' # CHOIR
 
 # 03_integrate
 Rscript -e 'install.packages("bbknnR")'
