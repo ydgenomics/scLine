@@ -1,0 +1,3 @@
+rawPaths,filterPaths,biosampleValues,sampleValues
+/data/work/scline/input/sample1/sample1_raw,/data/work/scline/input/sample1/sample1_filter,group1,sample1
+/data/work/scline/input/sample2/sample2_raw,/data/work/scline/input/sample2/sample2_filter,group2,sample2

@@ -1,3 +1,14 @@
+# Parameters
+h5ad_ref = "/jdfsms4/ST_STOMICS/STOmics_cloud/odms/prd/dcs_cloud/P20Z10200N0035/Files/yangdong/cotton/g2g/cotton_fibre_SCTransform.harmony_integrated_data_dpt_palantir_K2.h5ad"
+h5ad_query = "/jdfsms4/ST_STOMICS/STOmics_cloud/odms/prd/dcs_cloud/P20Z10200N0035/Files/yangdong/cotton/g2g/cotton_fibre_SCTransform.harmony_integrated_data_dpt_palantir_C1.h5ad"
+pseudotime_key = "palantir_pseudotime"
+annotation_colname = "celltype"
+threshold_similarity = 0.3
+n_top = 10
+distance_threshold = 0.57
+alignment_genes = "hvg"
+
+
 # %% [markdown]
 # # Tutorial on single-cell trajectory alignment using Genes2Genes
 # 
@@ -25,6 +36,46 @@ from genes2genes import ClusterUtils
 from genes2genes import TimeSeriesPreprocessor
 from genes2genes import PathwayAnalyser
 from genes2genes import VisualUtils
+
+# Parameters (can be overridden via command-line arguments)
+import argparse
+parser = argparse.ArgumentParser(description='Genes2Genes alignment parameters (defaults provided)')
+parser.add_argument('--h5ad_ref',
+                    default="/jdfsms4/ST_STOMICS/STOmics_cloud/odms/prd/dcs_cloud/P20Z10200N0035/Files/yangdong/cotton/g2g/cotton_fibre_SCTransform.harmony_integrated_data_dpt_palantir_K2.h5ad",
+                    help='Reference h5ad file path')
+parser.add_argument('--h5ad_query',
+                    default="/jdfsms4/ST_STOMICS/STOmics_cloud/odms/prd/dcs_cloud/P20Z10200N0035/Files/yangdong/cotton/g2g/cotton_fibre_SCTransform.harmony_integrated_data_dpt_palantir_C1.h5ad",
+                    help='Query h5ad file path')
+parser.add_argument('--pseudotime_key', default="palantir_pseudotime", help='Key in .obs for pseudotime')
+parser.add_argument('--annotation_colname', default="celltype", help='Column name in .obs for annotations')
+parser.add_argument('--threshold_similarity', type=float, default=0.3, help='Threshold for top dissimilar genes (fraction)')
+parser.add_argument('--n_top', type=int, default=10, help='Number of top genes to process')
+parser.add_argument('--distance_threshold', type=float, default=0.57, help='Distance threshold for clustering')
+parser.add_argument('--alignment_genes', choices=['hvg', 'all'], default="hvg", help='Which genes to align: hvg or all')
+
+# Parse args (when running as a script). If running in an interactive environment that
+# supplies argv differently, argparse will still use the default values.
+args = parser.parse_args()
+
+h5ad_ref = args.h5ad_ref
+h5ad_query = args.h5ad_query
+pseudotime_key = args.pseudotime_key
+annotation_colname = args.annotation_colname
+threshold_similarity = args.threshold_similarity
+n_top = args.n_top
+distance_threshold = args.distance_threshold
+alignment_genes = args.alignment_genes
+
+print("Using parameters:")
+print(f"  h5ad_ref = {h5ad_ref}")
+print(f"  h5ad_query = {h5ad_query}")
+print(f"  pseudotime_key = {pseudotime_key}")
+print(f"  annotation_colname = {annotation_colname}")
+print(f"  threshold_similarity = {threshold_similarity}")
+print(f"  n_top = {n_top}")
+print(f"  distance_threshold = {distance_threshold}")
+print(f"  alignment_genes = {alignment_genes}")
+
 
 # %% [markdown]
 # ### Load anndata reference and query objects

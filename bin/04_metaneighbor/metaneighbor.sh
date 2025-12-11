@@ -15,7 +15,7 @@ if [ "$only_metaNeighbor" != "yes" ]; then
     rm Rplots.pdf
 fi
 
-Rscript $metaNeighbor_r --input_file $rds --output_name $output_name \
+Rscript $metaNeighbor_r --input_file "$rds" --output_name $output_name \
 --batch_key $batch_key --cluster_key $cluster_key --threshold_value 0.95
 
 path=$(find "$(pwd)" -maxdepth 1 -name '*_metaNeighbor.csv' -exec readlink -f {} \;)

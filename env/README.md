@@ -130,19 +130,15 @@ nextflow -version
 # scline
 ```shell
 source /opt/software/miniconda3/bin/activate
+# nextflow
 conda install bioconda::nextflow -y
-# R
+# scline
 conda create -n scline r-base=4.3 -y
 conda activate scline
-conda install conda-forge::papermill -y
 conda install conda-forge::r-optparse -y
-conda install conda-forge::r-irkernel -y
 conda install conda-forge::r-biocmanager -y
 conda install conda-forge::r-devtools -y
-conda install conda-forge::r-remotes
-# python
-conda install conda-forge::ipykernel -y
-
+conda install conda-forge::r-remotes -y
 # 1_qc
 conda install conda-forge::r-seurat -y
 conda install bioconda::bioconductor-dropletutils -y
@@ -152,19 +148,33 @@ conda install conda-forge::leidenalg -y
 conda install conda-forge::r-soupx -y
 
 
-# 02_anno
-conda install bioconda::bioconductor-singler -y
-conda install conda-forge::r-hgnchelper -y
-conda install conda-forge::r-tidyverse -y
-conda install conda-forge::r-ggraph -y
-conda install conda-forge::r-data.tree -y
-conda install bioconda::bioconductor-scater -y
+# # 02_anno
+# conda install bioconda::bioconductor-singler -y
+# conda install conda-forge::r-hgnchelper -y
+# conda install conda-forge::r-tidyverse -y
+# conda install conda-forge::r-ggraph -y
+# conda install conda-forge::r-data.tree -y
+# conda install bioconda::bioconductor-scater -y
 
 # 02_cluster
-Rscript -e 'remotes::install_github("corceslab/CHOIR", ref="main", repos = BiocManager::repositories(), upgrade = "never")' # CHOIR
+# conda install bioconda::bioconductor-bluster -y
+Rscript -e 'BiocManager::install("bluster")'
+# Rscript -e 'devtools::install_github("pengminshi/mrtree")'
+# Rscript -e 'devtools::install_github("imbs-hl/ranger")'
+# Rscript -e 'remotes::install_github("corceslab/CHOIR", ref="main", repos = BiocManager::repositories(), upgrade = "never")' # CHOIR
+source /opt/software/miniconda3/bin/activate
+conda activate scline
+wget https://github.com/pengminshi/MRtree/archive/refs/heads/master.zip
+Rscript -e 'devtools::install_local("master.zip", dependencies = FALSE)'
+rm master.zip
+Rscript -e 'install.packages("ranger")'
+wget https://github.com/corceslab/CHOIR/archive/refs/heads/main.zip
+Rscript -e 'remotes::install_local("main.zip", dependencies = FALSE)'
+rm main.zip
+
 
 # 03_integrate
-Rscript -e 'install.packages("bbknnR")'
+# Rscript -e 'install.packages("bbknnR")'
 conda install pwwang::r-seuratdata -y
 conda install bioconda::r-liger -y
 conda install conda-forge::r-rcppplanc -y
@@ -188,12 +198,13 @@ conda install conda-forge::plotly -y
 # 05_dea
 Rscript -e "install.packages('presto')"
 pip install memento-de # memento
+pip install adjustText
 
-# 06_enrich
-conda install bioconda::bioconductor-clusterprofiler -y
-conda install bioconda::bioconductor-keggrest -y
-conda install bioconda::bioconductor-annotationforge -y
-Rscript -e 'install.packages("openxlsx", repos="https://cloud.r-project.org")' # install failed with conda
+# # 06_enrich
+# conda install bioconda::bioconductor-clusterprofiler -y
+# conda install bioconda::bioconductor-keggrest -y
+# conda install bioconda::bioconductor-annotationforge -y
+# Rscript -e 'install.packages("openxlsx", repos="https://cloud.r-project.org")' # install failed with conda
 
 # # recall
 # conda install bioconda::bioconductor-scdesign3 -y
@@ -202,7 +213,7 @@ Rscript -e 'install.packages("openxlsx", repos="https://cloud.r-project.org")' #
 # Rscript -e 'install.packages("countsplit")'
 ```
 
-# scib
+# scib and convert
 ```shell
 # scib-metrics
 conda create -n scib python=3.11 -y
@@ -222,21 +233,25 @@ conda install conda-forge::moscot -y
 # conda install -c conda-forge -c bioconda palantir -y #python要求3.12
 # pip install --user magic-impute
 conda install conda-forge::certifi -y
-conda install conda-forge::ipykernel -y
 conda install conda-forge::rpy2 -y
 # pip install fa2-modified
 conda install conda-forge::fa2 -y #不支持安装在大于等于3.12python
 conda install anaconda::click -y
 # python -m ipykernel install --user --name cellrank2 --display-name "Python (cellrank2)"
+
+# genes2genes
+pip install git+https://github.com/Teichlab/Genes2Genes.git -i https://mirrors.aliyun.com/pypi/simple/ 
+pip install optbinning # https://gnpalencia.org/optbinning/installation.html
 ```
 
 # convert [安装sceasy](https://mp.weixin.qq.com/s/MzMHKjHl-V_XWKYw9DEmCg)
 ```shell
 source /opt/software/miniconda3/bin/activate
-conda create -n convert r-seurat=4.4 r-devtools python=3.11 -y
-conda activate convert
-conda install -c conda-forge scanpy -y
-conda install bioconda::r-sceasy -y
+conda install conda-forge::mamba -y
+mamba create -n convert r-seurat=4.4 r-devtools python=3.11 -y
+mamba activate convert
+mamba install -c conda-forge scanpy -y
+mamba install bioconda::r-sceasy -y
 # Rscript -e 'devtools::install_github("cellgeni/schard")' # fail
 wget https://github.com/cellgeni/schard/archive/refs/heads/main.zip
 Rscript -e 'devtools::install_local("main.zip")'

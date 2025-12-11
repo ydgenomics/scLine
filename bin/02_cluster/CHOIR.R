@@ -1,11 +1,29 @@
-# 加载包
+### 251211
+
 library(Seurat)
 library(CHOIR)
 library(dplyr)
 library(ggplot2)  
 
+library(optparse)
+
+option_list <- list(
+  make_option(c("-i", "--input_rds"), type = "character", default = "/data/users/yangdong/yangdong_231e5ea9edf9491ca6183fe80520203c/online/scline/output/example1/example1.hr.rds",
+              help = "Path to input Seurat RDS file [default: %default]"),
+  make_option(c("-n", "--n_cores"), type = "integer", default = 4,
+              help = "Number of cores to use for CHOIR functions [default: %default]")
+)
+
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+
+input_rds <- opt$input_rds
+n_cores <- opt$n_cores
+
 # 读取Seurat对象
-seurat.obj <- readRDS("/data/work/path/")
+seurat.obj <- readRDS(input_rds)
+library(tools)
+prefix <- tools::file_path_sans_ext(basename(input_rds))
 
 # 质量控制：排除细胞中reads数少于100的细胞和在少于5个细胞中出现的基因
 seurat.obj <- subset(seurat.obj, subset = nCount_RNA > 100)
@@ -31,18 +49,13 @@ print(Reductions(seurat.obj))
 Idents(seurat.obj) <- "CHOIR_clusters_0.05"
 
 # 可视化聚类结果
-pdf(file = "/data/work/new_D10_merged_choir_clusters.pdf", width = 8, height = 8)
+pdf(file = paste0(prefix, "_choir_clusters.pdf"), width = 8, height = 8)
 DimPlot(seurat.obj, 
         reduction = "CHOIR_P0_reduction_UMAP",  
         group.by = "CHOIR_clusters_0.05", 
         label = TRUE, 
         pt.size = 0.5)
 dev.off()
-
-# 保存处理后的RDS
-print("Saving processed Seurat object to:")
-print("/data/work/new_D10_merged_obj_after_choir.Rds")
-saveRDS(seurat.obj, file = "/data/work/name_obj_after_choir.Rds")  #对应修改名称
 
 # 差异表达分析
 markers <- FindAllMarkers(seurat.obj, only.pos = TRUE)
@@ -53,9 +66,7 @@ markers <- markers %>%
     filter(avg_log2FC > 1)
 
 # 保存差异表达基因结果
-print("Saving marker genes to:")
-print("/data/work/7112.2_markers.csv")
-write.csv(markers, file = "/data/work/markers.csv", row.names = FALSE)  #对应修改名称
+write.csv(markers, file = paste0(prefix, "_choir_markers.csv"), row.names = FALSE)  #对应修改名称
 
 # 提取差异表达基因的特征，每个聚类取平均对数变化最大的5个基因
 features <- markers %>% 
@@ -67,9 +78,8 @@ features <- markers %>%
     pull()
 
 # 绘制点图 - 使用umap降维结果
-print("Saving dot plot to:")
-print("/data/work/7112.2_dotplot_adjusted.pdf")
-pdf(file = "/data/work/7112.2_dotplot_adjusted.pdf", width = 35, height = 20)  
+num <- unique(seurat.obj$CHOIR_clusters_0.05)
+pdf(file = paste0(prefix, "_choir_dotplot.pdf"), width = num*2, height = num)
 p <- DotPlot(seurat.obj, features = features, dot.scale = 6) + 
     RotatedAxis() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 6))
@@ -93,7 +103,7 @@ dist_matrix <- dist(t(cluster_means))
 hc <- hclust(dist_matrix, method = "ward.D2")
 
 # 4. 绘制树状图
-pdf("/data/work/7112.2_cluster_dendrogram.pdf", width = 8, height = 6)
+pdf(paste0(prefix, "_dendrogram.pdf"), width = 8, height = 6)
 plot(hc, main = "Cluster Dendrogram", xlab = "CHOIR Clusters")
 dev.off()
 
@@ -107,7 +117,7 @@ all_levels <- all_levels[order(as.numeric(gsub("L", "", all_levels)))]  # 这里
 print(paste("检测到", length(all_levels), "个层级:", paste(all_levels, collapse = ", ")))
 
 # 7.设置输出目录
-output_dir <- "/data/work/7113_CHOIR_markers"
+output_dir <- paste0(prefix, "_CHOIR_markers")
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
 # 8.为每个层级生成标记基因列表
@@ -132,3 +142,8 @@ for (level in all_levels) {
   message("已完成层级 ", level, " 的标记基因分析，文件保存至：", 
           file.path(output_dir, paste0("markers_", level, ".csv")))
 }
+
+# 保存处理后的RDS
+print("Saving processed Seurat object to:")
+print(paste0(prefix, "_after_choir.rds"))
+saveRDS(seurat.obj, file = paste0(prefix, "_after_choir.rds"))  #对应修改名称

@@ -1,20 +1,26 @@
-rds=$1
-ident_1=$2
-ident_2=$3
-cluster_key=$4
-findmarkers_r=$5
-single_volcano_r=$6
-only_pos="no" # "yes" or "no"
+input_h5ad=$1
+group_key=$2
+control_value=$3
+sample_key=$4
+cluster_key=$5
+split_cluster_py=$6
+dea_memento_py=$7
+capture_rate=0.07
+min_perc=0.7
+pval_threshold=0.05
+n_cpu=4
+top_number=5
+perform_2d_test='no' # "yes" means run 2d test(coefficient)
 
-Rscript $findmarkers_r \
---rds $rds --assay RNA --ident_1 "$ident_1" --ident_2 "$ident_2" --cluster_key $cluster_key --only_pos $only_pos
 
-csvs=$(find . -maxdepth 1 -type f -name "*.csv")
-echo $csvs
+python $split_cluster_py \
+--input $input_h5ad \
+--group_key $group_key \
+--cluster_key $cluster_key
 
-for input_csv in $(echo $csvs | tr ' ' ' '); do
-    echo "$input_csv"
-    Rscript $single_volcano_r \
-    --gene_csv $input_csv --coef_col "avg_log2FC" --pval_col "p_val_adj" \
-    --coef_threshold 1 --pval_threshold 0.01 --n_top 15
+for f in *.h5ad; do
+    python $dea_memento_py \
+    --input_h5ad $f --group_key $group_key --control_value $control_value --sample_key $sample_key \
+    --capture_rate $capture_rate --min_perc $min_perc --pval_threshold $pval_threshold \
+    --n_cpu $n_cpu --top_number $top_number --perform_2d_test $perform_2d_test
 done
