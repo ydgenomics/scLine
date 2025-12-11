@@ -71,11 +71,9 @@ def checkBiosampleGroups() {
         sampleToBiosample[sample] = biosample
     }
     
-    println "=== biosample分组信息 ==="
     biosampleGroups.each { biosample, samples ->
         println "${biosample}: ${samples}"
     }
-    println "======================"
     
     return [
         groups: biosampleGroups,

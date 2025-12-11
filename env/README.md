@@ -1,132 +1,3 @@
-## Using conda builds available running environment
-
-```shell
-# convert
-conda env export -n convert > convert_environment.yaml
-
-# scib  
-conda env export -n scib > scib_environment.yaml
-
-# scline
-conda env export -n scline > scline_environment.yaml
-```
-
-```shell
-cd /
-git clone https://github.com/ydgenomics/scLine.git
-conda env create -f /scLine/env/scib_environment.yaml
-
-```
-
-- papermill 终端离线运行notebook
-- optparse R脚本传参
-- irkernel 运行notebook的R核心
-- presto R更快运行检验
-- biocmanager R包管理
-- devtools R包管理
-- remotes R包管理
-- ipykernel 运行notebook的python核心
-
-|subtask|software|
-|-|-|
-|1_qc|`lapply(c("Seurat","DropletUtils","SoupX", "optparse"), library, character.only = T)`|
-||`import scanpy; import leidenalg; import scrublet`|
-|2_anno|`lapply(c("ggraph","igraph","tidyverse", "data.tree"), library, character.only = T)`|
-||`lapply(c("dplyr","Seurat","HGNChelper", "optparse"), library, character.only = T)`|
-||`lapply(c("scater","SingleR","SingleCellExperiment"), library, character.only = T)`|
-|03_integrate|`lapply(c("bbknnR", "patchwork", "SeuratData", "optparse", "magrittr"), library, character.only = T)`|
-||`lapply(c("rliger", "harmony", "SeuratWrappers"), library, character.only = T)`|
-||`import harmonypy; import scvi`|
-||`import numpy as np; import scanpy as sc; import matplotlib.pyplot as plt; import webbrowser; from scib_metrics.benchmark import Benchmarker, BioConservation, BatchCorrection; import click`|
-|04_metaneighbor|`lapply(c("MetaNeighbor", "ComplexHeatmap", "circlize"), library, character.only = T)`|
-||`import plotly.graph_objects as go`|
-|06_enrich|`lapply(c("clusterProfiler", "stringr", "KEGGREST", "AnnotationForge"), library, character.only = T)`|
-||`lapply(c("purrr", "RCurl", "data.table", "readxl"), library, character.only = T)`|
-|convert|`lapply(c("Seurat", "sceasy", "schard", "reticulate"), library, character.only = T)`|
-|07_pseudotime|`import sys; import os; import numpy as np; import pandas as pd; import matplotlib.pyplot as plt; import seaborn as sns; import cellrank as cr; import scanpy as sc; import scvelo as scv`|
-
-<details> <summary> 查看机器 </summary>
-
-```shell
-## stereonote-workflow-basic
-root@e20515d48d96:/# cat /etc/os-release
-PRETTY_NAME="Ubuntu 22.04.5 LTS"
-NAME="Ubuntu"
-VERSION_ID="22.04"
-VERSION="22.04.5 LTS (Jammy Jellyfish)"
-VERSION_CODENAME=jammy
-ID=ubuntu
-ID_LIKE=debian
-HOME_URL="https://www.ubuntu.com/"
-SUPPORT_URL="https://help.ubuntu.com/"
-BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
-PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
-UBUNTU_CODENAME=jammy
-```
-
-</details>
-
-<details> <summary> 安装wgt并配置miniconda </summary>
-
-```shell
-apt update
-apt install wget
-wget --version
-mkdir software; cd software
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh # install miniconda
-# bash Miniconda3-latest-Linux-x86_64.sh # will installed on ~/miniconda3
-bash Miniconda3-latest-Linux-x86_64.sh -b -p /software
-source /software/miniconda/bin/activate
-# conda config --set auto_activate_base false
-```
-
-</details>
-
-<details> <summary> 安装java再基于java安装nextflow </summary>
-
-Python 3 and R image镜像
-```shell
-# https://www.nextflow.io/docs/latest/install.html
-# [华大云平台Python 3 and R image镜像Centos7的yum配置修改看这个](https://developer.aliyun.com/article/1575375)
-# yum install zip -y
-curl -s "https://get.sdkman.io" | bash
-source "/home/stereonote/.sdkman/bin/sdkman-init.sh"
-sdk install java 17.0.10-tem
-java -version
-
-curl -s https://get.nextflow.io | bash
-
-chmod +x nextflow
-
-# 创建本地bin目录（如果不存在）
-mkdir -p $HOME/.local/bin/
-
-# 将nextflow移动到该目录
-mv nextflow $HOME/.local/bin/
-
-# 将$HOME/.local/bin/添加到PATH环境变量（如果还没有的话）
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> $HOME/.bashrc
-
-# 重新加载bash配置
-source $HOME/.bashrc
-
-# 验证安装
-nextflow -version
-
-# # 修改JAR文件的所有者为stereonote用户
-# chown stereonote:stereonote /home/stereonote/.nextflow/framework/25.10.0/nextflow-25.10.0-one.jar
-
-# # 修改文件权限，让所有者有读写权限，其他用户有读权限
-# chmod 644 /home/stereonote/.nextflow/framework/25.10.0/nextflow-25.10.0-one.jar
-
-# # 验证权限修改
-# ls -la /home/stereonote/.nextflow/framework/25.10.0/nextflow-25.10.0-one.jar
-```
-
-</details>
-
-<details> <summary> 配置scline环境安装依赖包 </summary>
-
 # scline
 ```shell
 source /opt/software/miniconda3/bin/activate
@@ -213,7 +84,7 @@ pip install adjustText
 # Rscript -e 'install.packages("countsplit")'
 ```
 
-# scib and convert
+# scib
 ```shell
 # scib-metrics
 conda create -n scib python=3.11 -y
@@ -261,4 +132,16 @@ conda install conda-forge::loompy -y
 conda install conda-forge::r-optparse -y
 ```
 
-</details>
+# genes2genes
+```shell
+source /opt/software/miniconda3/bin/activate
+conda create --name g2g python=3.8 -y
+conda activate g2g
+# pip install genes2genes
+# pip install git+https://github.com/Teichlab/Genes2Genes.git
+pip install git+https://github.com/Teichlab/Genes2Genes.git -i https://mirrors.aliyun.com/pypi/simple/ 
+pip install optbinning # https://gnpalencia.org/optbinning/installation.html
+conda install conda-forge::ipykernel -y
+conda install conda-forge::scanpy -y
+# python -m ipykernel install --user --name g2g --display-name "Python (g2g)"
+```
